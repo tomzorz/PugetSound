@@ -26,11 +26,16 @@ namespace PugetSound
 
         public IReadOnlyCollection<RoomMember> Members => _members;
 
+        private List<IRoomEvent> _roomEvents;
+
+        public IReadOnlyCollection<IRoomEvent> RoomEvents => _roomEvents;
+
         public PartyRoom(string roomId, ILogger logger)
         {
             _logger = logger;
             RoomId = roomId;
             _members = new List<RoomMember>();
+            _roomEvents = new List<IRoomEvent>();
 
             _handledUntil = DateTimeOffset.Now;
             _currentDjNumber = -1;
@@ -46,6 +51,9 @@ namespace PugetSound
             _members.Add(member);
             OnRoomMembersChanged?.Invoke(this, member.UserName);
 
+            _roomEvents.Add(new UserEvent(member.UserName, member.FriendlyName, UserEventType.JoinedRoom));
+            _roomEvents.Add(new UserEvent(member.UserName, member.FriendlyName, UserEventType.BecameListener));
+
             if (_currentTrack != null) StartSongForMemberUgly(member);
         }
 
@@ -58,6 +66,8 @@ namespace PugetSound
         public void ToggleDj(RoomMember member, bool isDj)
         {
             member.IsDj = isDj;
+
+            _roomEvents.Add(new UserEvent(member.UserName, member.FriendlyName, isDj ? UserEventType.BecameDj : UserEventType.BecameListener));
 
             foreach (var roomMember in _members)
             {
@@ -74,6 +84,8 @@ namespace PugetSound
 
             if (_members.Count / 2 > _members.Count(x => x.VotedSkipSong)) return;
 
+            _roomEvents.Add(new SongSkippedEvent());
+
             _handledUntil = DateTimeOffset.Now;
             foreach (var roomMember in _members)
             {
@@ -85,6 +97,8 @@ namespace PugetSound
         {
             var didRemove = _members.Remove(member);
             if (!didRemove) return;
+
+            _roomEvents.Add(new UserEvent(member.UserName, member.FriendlyName, UserEventType.LeftRoom));
 
             OnRoomMembersChanged?.Invoke(this, member.UserName);
         }
@@ -141,6 +155,10 @@ namespace PugetSound
                         SongStartedAtUnixTimestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
                         SongFinishesAtUnixTimestamp = _handledUntil.ToUnixTimeMilliseconds()
                     };
+
+                    _roomEvents.Add(new SongPlayedEvent(nextPlayer.UserName, nextPlayer.FriendlyName,
+                        $"{CurrentRoomState.CurrentSongArtist} - {CurrentRoomState.CurrentSongTitle}", song.Id, song.Uri));
+
                     return CurrentRoomState;
                 }
 
