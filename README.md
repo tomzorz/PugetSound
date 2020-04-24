@@ -4,6 +4,8 @@ PugetSound allows you and your group to enjoy music together using Spotify.
 
 ![](https://img.shields.io/badge/platform-any-green.svg?longCache=true&style=flat-square) ![](https://img.shields.io/badge/license-MIT-blue.svg?longCache=true&style=flat-square)
 
+![](screenshot.png)
+
 The main inspiration for this project was AuxParty, but I wanted to improve on the concept in a few ways:
 
 - play music from the Spotify client
