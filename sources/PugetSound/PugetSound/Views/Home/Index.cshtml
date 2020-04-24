@@ -1,5 +1,6 @@
 ﻿@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @using PugetSound
+@using PugetSound.Logic
 @model PugetSound.Models.IndexModel
 @{
     ViewData["Title"] = "PugetSound";
@@ -27,7 +28,7 @@
                 <input type="hidden" asp-for="PlaylistId" value="@Model.PlaylistId"/>
                 <input asp-for="RoomName" pattern="[a-z]{3,}" value="@Model.RoomName"/>
                 <input type="submit" value="Enter room"/>
-            </form>i
+            </form>
             <hr />
             <h2>How it works</h2>
             <p>PugetSound creates a playlist called "PugetSound Queue" in your Spotify account. When you join a room and become a DJ, you'll take turns to play a song for the room members. When it's your turn, the first song from your queue playlist will be played for everyone, and it'll be also removed from said playlist. (Therefore it's not recommended to use it for other purposes.)</p>
@@ -35,6 +36,8 @@
             <h2>Requirements</h2>
             <p>1. Spotify Premium: Apparently a premium account is required to play songs via the API.</p>
             <p>2. Keeping <em>a</em> Spotify player open <em>somewhere</em>. This can be the desktop client, your phone or the web app. Doesn't matter, but the music needs to come from somewhere.</p>
+            <h2>Everything else</h2>
+            <p>This is an open source project <a href="https://github.com/tomzorz/PugetSound">available on GitHub</a>!</p>
         </div>
     </div>
 </div>

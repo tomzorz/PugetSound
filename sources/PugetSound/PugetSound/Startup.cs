@@ -18,6 +18,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using PugetSound.Auth;
+using PugetSound.Hubs;
+using PugetSound.Logic;
 using SpotifyAPI.Web;
 using SpotifyAPI.Web.Enums;
 

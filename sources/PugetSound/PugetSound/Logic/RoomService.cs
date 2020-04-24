@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc.Diagnostics;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
+using PugetSound.Hubs;
 
-namespace PugetSound
+namespace PugetSound.Logic
 {
     public class RoomService
     {

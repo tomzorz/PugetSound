@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
 
-namespace PugetSound
+namespace PugetSound.Logic
 {
     public class RoomWorker : BackgroundService
     {

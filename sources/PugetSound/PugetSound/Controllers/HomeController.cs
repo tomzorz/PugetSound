@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using PugetSound.Auth;
+using PugetSound.Logic;
 using PugetSound.Models;
 using SpotifyAPI.Web;
 

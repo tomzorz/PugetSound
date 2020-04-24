@@ -1,27 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using Microsoft.VisualBasic.CompilerServices;
 using PugetSound.Auth;
+using PugetSound.Logic;
 
-namespace PugetSound
+namespace PugetSound.Hubs
 {
-    public interface IRoomHubInterface
-    {
-        Task ListenersChanged(List<RoomMember> listeners);
-
-        Task DjsChanged(List<RoomMember> djs);
-
-        Task SongChanged(RoomState state);
-
-        Task ApplyClientTimeDifference(long difference);
-    }
-
     public class RoomHub : Hub<IRoomHubInterface>
     {
         private readonly RoomService _roomService;
