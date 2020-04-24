@@ -1,0 +1,297 @@
+﻿@model PugetSound.Models.RoomModel
+@{
+    ViewData["Title"] = $"Room {Model.RoomName} - PugetSound";
+}
+
+    <div class="container page-room">
+        <div class="row">
+            <div class="col-sm-8">
+                <h1>🎶 Room <span>@Model.RoomName</span></h1>
+            </div>
+            <div class="col-sm-4">
+                <div class="alert alert-warning" id="connectionBox">📡 <span id="connectionStatus"></span></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="blue-border p-3">
+                    <div class="row align-items-center">
+                        <div class="col-sm-auto">
+                            <input type="button" id="leaveRoomButton" value="Leave room" />
+                        </div>
+                        <div class="col-sm-10">
+                            <p class="mb-0"><strong>If you close this page playback will continue on the backend.</strong><br /> To stop, press the [Leave room] button. You can rejoin this page to press it later.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <hr />
+        <div class="row align-items-center">
+            <div class="col-sm-auto">
+                <img width="250" height="250" id="currentSongArt" />
+                <progress id="currentProgress" value="0" max="100"></progress>
+            </div>
+            <div class="col-sm-auto">
+                <h5>Now playing:</h5>
+                <div class="mt-3 mb-3 pl-3 border-left border-success">
+                    <p id="currentSongTitle" class="font-weight-bold">-</p>
+                    <p id="currentSongArtist" class="font-weight-light">-</p>
+                    <p id="currentTime" class="mb-0">-</p>
+                </div>
+                <h5>Queued by:</h5>
+                <div class="mt-3 mb-3 pl-3 border-left border-success">
+                    <p id="currentDj">-</p>
+                </div>
+            </div>
+        </div>
+        <hr />
+        <div class="row">
+            <div class="col-sm-4">
+                <h3>Controls</h3>
+                <input type="button" id="voteSkipSongButton" value="Vote Skip Song" />
+            </div>
+            <div class="col-sm-4">
+                <h3>DJs</h3>
+                <ul id="djList">
+                </ul>
+                <input type="button" id="joinDjButton" value="Become a DJ" />
+                <p class="mt-3 mb-3">Play songs by adding them to your <a href="@Model.QueuePlaylistLink">PugetSound Queue</a> playlist.</p>
+            </div>
+            <div class="col-sm-4">
+                <h3>Listeners</h3>
+                <ul id="listenerList">
+                </ul>
+                <input type="button" id="joinListenerButton" value="Become a listener" />
+            </div>
+        </div>
+    </div>
+
+<script src="~/js/signalr/dist/browser/signalr.js"></script>
+
+<script type="text/javascript">
+
+    /*
+     * useful links
+     *
+     * linq to js https://gist.github.com/DanDiplo/30528387da41332ff22b
+     *
+     */
+
+    const userName = "@Model.UserName";
+
+    let d = new Date();
+    var timeNow = d.getTime();
+    var timeEnd = timeNow;
+    var timeDifference = 0;
+
+    // disable controls until we know what's up
+
+    document.getElementById("leaveRoomButton").disabled = true;
+    document.getElementById("joinDjButton").disabled = true;
+    document.getElementById("joinListenerButton").disabled = true;
+    document.getElementById("voteSkipSongButton").disabled = true;
+
+    // create connection
+    var connection = new signalR.HubConnectionBuilder()
+        .withUrl("/roomhub")
+        .configureLogging(signalR.LogLevel.Debug)
+        .withAutomaticReconnect()
+        .build();
+
+    connection.onreconnecting(error => {
+        console.assert(connection.state === signalR.HubConnectionState.Reconnecting);
+        document.getElementById("connectionBox").className = "alert alert-warning";
+        console.log(`Connection lost due to error "${error}.`);
+        document.getElementById("connectionStatus").textContent = 'Reconnecting (see log)';
+    });
+
+    connection.onreconnected(connectionId => {
+        console.assert(connection.state === signalR.HubConnectionState.Connected);
+        document.getElementById("connectionBox").className = "alert alert-success";
+        document.getElementById("connectionStatus").textContent = 'Connection reestablished';
+
+        // say hello
+        connection.invoke("hello", (new Date()).getTime()).catch(function (err) {
+            return console.error(err.toString());
+        });
+    });
+
+    connection.onclose(error => {
+        console.assert(connection.state === signalR.HubConnectionState.Disconnected);
+        document.getElementById("connectionBox").className = "alert alert-danger";
+        console.log(`Connection lost due to error "${error}.`);
+        document.getElementById("connectionStatus").textContent = 'Connection lost (see log)';
+    });
+
+    // incoming events
+
+    connection.on("SongChanged", function (roomState) {
+        document.getElementById("currentDj").textContent = roomState.currentDjName;
+        document.getElementById("currentSongArtist").textContent = roomState.currentSongArtist;
+        document.getElementById("currentSongTitle").textContent = roomState.currentSongTitle;
+        document.getElementById("currentSongArt").src = roomState.currentSongArtUrl;
+        timeNow = roomState.songStartedAtUnixTimestamp;
+        timeEnd = roomState.songFinishesAtUnixTimestamp;
+
+        // gtag
+        gtag('event', 'song_played',
+        {
+                'event_category': '@Model.RoomName',
+                'event_label': roomState.currentSongArtist + " - " + roomState.currentSongTitle
+        });
+    });
+
+    connection.on("ListenersChanged", function (listeners) {
+        // clear out list
+        var listenerList = document.getElementById("listenerList");
+        listenerList.innerHTML = "";
+
+        // add members
+        listeners.forEach(listener => {
+            var li = document.createElement("li");
+            li.innerHTML = listener.friendlyName + ' <a href="spotify:user:' + listener.userName + '" class="badge badge-primary">🔗 Profile</a>';
+            listenerList.appendChild(li);
+        });
+
+        // toggle button
+        document.getElementById("joinListenerButton").disabled = listeners.some(function(listener) {
+            return listener.userName === userName;
+        });
+
+        // gtag
+        gtag('event', 'members_changed',
+            {
+                'event_category': '@Model.RoomName',
+                'event_label': "listeners"
+            });
+    });
+
+    connection.on("DjsChanged", function (djs) {
+        // clear out list
+        var djList = document.getElementById("djList");
+        djList.innerHTML = "";
+
+        // add members
+        djs.forEach(dj => {
+            var li = document.createElement("li");
+            li.innerHTML = dj.friendlyName + '<sup> [' + dj.djOrderNumber +']</sup> <a href="spotify:user:' + dj.userName + '" class="badge badge-primary">🔗 Profile</a>';
+            djList.appendChild(li);
+        });
+
+        // toggle button
+        document.getElementById("joinDjButton").disabled = djs.some(function (dj) {
+            return dj.userName === userName;
+        });
+
+        // gtag
+        gtag('event', 'members_changed',
+            {
+                'event_category': '@Model.RoomName',
+                'event_label': "djs"
+            });
+    });
+
+    connection.on("ApplyClientTimeDifference", function(difference) {
+        timeDifference = difference;
+    });
+
+    // start connection
+
+    connection.start().then(function () {
+        // signal status
+        document.getElementById("connectionStatus").innerHTML = "Connection established";
+        document.getElementById("connectionBox").className = "alert alert-success";
+
+        // re-enable controls
+        document.getElementById("leaveRoomButton").disabled = false;
+        document.getElementById("joinDjButton").disabled = false;
+        document.getElementById("joinListenerButton").disabled = false;
+        document.getElementById("voteSkipSongButton").disabled = false;
+
+        // say hello
+        connection.invoke("hello", (new Date()).getTime()).catch(function (err) {
+            return console.error(err.toString());
+        });
+
+        // gtag
+        gtag('event', 'user_joined',
+            {
+                'event_category': '@Model.RoomName',
+                'event_label': userName
+            });
+    }).catch(function (err) {
+        document.getElementById("connectionBox").className = "alert alert-danger";
+        console.log(`Connection lost due to error "${error}.`);
+        document.getElementById("connectionStatus").textContent = 'Connection lost (see log)';
+        return console.error(err.toString());
+    });
+
+    // outgoing events
+
+    document.getElementById("leaveRoomButton").addEventListener("click", function (event) {
+        connection.invoke("leaveRoom").then(function () {
+            // gtag
+            gtag('event', 'user_left',
+                {
+                    'event_category': '@Model.RoomName',
+                });
+
+            window.location.href = '/';
+        }).catch(function (err) {
+            return console.error(err.toString());
+        });
+
+        event.preventDefault();
+    });
+
+    document.getElementById("joinDjButton").addEventListener("click", function (event) {
+        connection.invoke("becomeDj").catch(function (err) {
+            return console.error(err.toString());
+        });
+        event.preventDefault();
+    });
+
+    document.getElementById("joinListenerButton").addEventListener("click", function (event) {
+        connection.invoke("becomeListener").catch(function (err) {
+            return console.error(err.toString());
+        });
+        event.preventDefault();
+    });
+
+    document.getElementById("voteSkipSongButton").addEventListener("click", function (event) {
+        connection.invoke("voteSkipSong").catch(function (err) {
+            return console.error(err.toString());
+        });
+
+        // gtag
+        gtag('event', 'vote_skip',
+            {
+                'event_category': '@Model.RoomName'
+            });
+
+        event.preventDefault();
+    });
+
+    // progress
+
+    function humanize(millis) {
+        var minutes = Math.floor(millis / 60000);
+        var seconds = ((millis % 60000) / 1000).toFixed(0);
+        return minutes + ":" + (seconds < 10 ? '0' : '') + seconds;
+    }
+
+    setInterval(function(){
+        let current = (new Date()).getTime() + timeDifference;
+        if(timeNow <= current && timeEnd > current) {
+            document.getElementById("currentTime").innerHTML = humanize(current-timeNow) + " (-" + humanize(timeEnd-current) + ")";
+            document.getElementById("currentProgress").max = timeEnd-timeNow;
+            document.getElementById("currentProgress").value = current-timeNow;
+        }
+        if (timeEnd < current) {
+            document.getElementById("currentProgress").max = 100;
+            document.getElementById("currentProgress").value = 100;
+            document.getElementById("currentTime").innerHTML = "Changing songs...";
+        }
+    }, 1000);
+</script>

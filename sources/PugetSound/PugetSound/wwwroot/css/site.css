@@ -1,0 +1,168 @@
+﻿/* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
+for details on configuring this project to bundle and minify static web assets. */
+
+a.navbar-brand {
+    white-space: normal;
+    text-align: center;
+    word-break: break-all;
+}
+
+/* Provide sufficient contrast against white background */
+a {
+    color: #0366d6;
+}
+
+.btn-primary {
+    color: #fff;
+    background-color: #1b6ec2;
+    border-color: #1861ac;
+}
+
+.nav-pills .nav-link.active, .nav-pills .show > .nav-link {
+    color: #fff;
+    background-color: #1b6ec2;
+    border-color: #1861ac;
+}
+
+/* Sticky footer styles
+-------------------------------------------------- */
+html {
+    font-size: 14px;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+.border-top {
+    border-top: 1px solid #e5e5e5;
+}
+
+.border-bottom {
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.box-shadow {
+    box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
+}
+
+button.accept-policy {
+    font-size: 1rem;
+    line-height: inherit;
+}
+
+/* Sticky footer styles
+-------------------------------------------------- */
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    margin-top: 0;
+    margin-left: 0;
+    margin-right: 0;
+    margin-bottom: 60px;
+}
+
+.footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    white-space: nowrap;
+    line-height: 60px; /* Vertically center the text there */
+}
+
+/* --------------------- custom stuff --------------------- */
+
+input[type=button], input[type=submit], input[type=reset] {
+    background-color: #1ed760;
+    border: none;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 500px;
+}
+
+.page-room input[type=button], .page-room input[type=submit], .page-room input[type=reset] {
+    padding: 8px 16px;
+}
+
+input[type=text] {
+    border-radius: 500px;
+    padding-left: 8px;
+}
+
+main, .footer {
+    color: white;
+}
+
+.footer {
+    background-color: black;
+}
+
+.bggradient {
+    top: 0;
+    left: 0;
+    position: fixed;
+    height: 100vh;
+    width: 100vw;
+    background-image: linear-gradient(90deg, #c074b2, #8ab5e8);
+}
+
+.bggradient2 {
+    top: 0;
+    left: 0;
+    position: fixed;
+    height: 100vh;
+    width: 100vw;
+    background-image: linear-gradient(transparent, #000);
+}
+
+#currentProgress {
+    -webkit-appearance: none;
+    appearance: none;
+    display: block;
+    width: 250px;
+    height: 10px;
+    margin: 0;
+    padding: 0;
+}
+
+#listenerList, #djList {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+#listenerList li, #djList li {
+    display: block;
+    margin-bottom: 1rem;
+}
+
+h1 span {
+    color: white;
+    text-shadow: 2px 2px black;
+}
+
+a {
+    color: #1ed760;
+}
+
+a:hover {
+    color: darkgreen;
+}
+
+hr {
+    border: 2px solid #1ed760;
+    margin: 2rem 0;
+}
+
+.green-border {
+    border-left: 2px solid #1ed760;
+}
+
+.blue-border {
+    border: 2px dotted #999999;
+}
