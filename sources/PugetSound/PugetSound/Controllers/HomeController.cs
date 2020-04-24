@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
@@ -140,6 +142,16 @@ namespace PugetSound.Controllers
                 // if it doesn't match leave the prev one
                 prevRoom.MemberLeave(prevRoom.Members.First(x => x.UserName == username));
             }
+
+            // sanitize room name
+            var rgx = new Regex("[^a-zA-Z-]");
+            var sanitizedRoomName = rgx.Replace(room.RoomName.Replace(" ", "-"), string.Empty);
+            if (string.IsNullOrWhiteSpace(sanitizedRoomName) || sanitizedRoomName.Length < 3)
+            {
+                // hehe
+                sanitizedRoomName = "naughty-room-name";
+            }
+            room.RoomName = sanitizedRoomName;
 
             var party = _roomService.EnsureRoom(room.RoomName);
 

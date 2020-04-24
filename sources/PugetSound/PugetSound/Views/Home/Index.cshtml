@@ -24,9 +24,10 @@
                     <p class="mb-0">If you enter a different room name you'll leave your current one.</p>
                 </div>
             }
+            <p><em>Letters and hyphens allowed. On room creation spaces will be converted to hyphens, other disallowed will be removed. 3 characters minimum.</em></p>
             <form method="post" asp-contoller="Index" asp-action="Room">
                 <input type="hidden" asp-for="PlaylistId" value="@Model.PlaylistId"/>
-                <input asp-for="RoomName" pattern="[a-z]{3,}" value="@Model.RoomName"/>
+                <input asp-for="RoomName" pattern="[-a-zA-Z]{3,}" value="@Model.RoomName"/>
                 <input type="submit" value="Enter room"/>
             </form>
             <hr />
