@@ -1,0 +1,25 @@
+﻿@using Humanizer
+@using Humanizer.Configuration
+@model PugetSound.Models.RoomHistoryModel
+@{
+    ViewData["Title"] = "RoomHistory";
+}
+
+<div class="container page-room">
+    <div class="row mb-3">
+        <div class="col-sm-12">
+            <h1>🕒 Room <span>@Model.RoomName</span> history</h1>
+        </div>
+    </div>
+    @for (var i = Model.RoomEvents.Count - 1; i >= 0; i--)
+    {
+    <div class="row">
+        <div class="col-sm-2">
+            <p>@Model.RoomEvents.ElementAt(i).At.Humanize()</p>
+        </div>
+        <div class="col-sm-10">
+            <p>@Model.RoomEvents.ElementAt(i).Title @if (Model.RoomEvents.ElementAt(i).Uri != null){<a href="@Model.RoomEvents.ElementAt(i).Uri">🔗 on Spotify</a>}</p>
+        </div>
+    </div>
+    }
+</div>

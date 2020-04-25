@@ -25,6 +25,14 @@ namespace PugetSound.Logic
         private readonly Dictionary<string, PartyRoom> _rooms;
         private readonly Dictionary<string, PartyRoom> _memberRoomCache;
 
+        public IReadOnlyCollection<IRoomEvent> TryGetRoomEvents(string roomId)
+        {
+            return _rooms.ContainsKey(roomId) ? _rooms[roomId].RoomEvents : new List<IRoomEvent>
+            {
+                new CustomRoomEvent("You tried to see the room history for a room that doesn't exist. Womp-womp.")
+            };
+        }
+
         public PartyRoom EnsureRoom(string roomId)
         {
             if (_rooms.ContainsKey(roomId)) return _rooms[roomId];

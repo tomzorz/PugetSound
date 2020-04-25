@@ -128,6 +128,18 @@ namespace PugetSound.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [Route("/RoomHistory/{room}")]
+        public IActionResult RoomHistory(string room)
+        {
+            var roomEvents = _roomService.TryGetRoomEvents(room);
+
+            return View(nameof(RoomHistory), new RoomHistoryModel
+            {
+                RoomEvents = roomEvents,
+                RoomName = room
+            });
+        }
+
         [HttpPost]
         public async Task<IActionResult> Room(IndexModel room)
         {

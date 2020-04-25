@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29911.84
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PugetSound", "PugetSound\PugetSound.csproj", "{294DD06A-896F-4E69-A595-A17F5CAED5B9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PugetSound", "PugetSound\PugetSound.csproj", "{294DD06A-896F-4E69-A595-A17F5CAED5B9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
