@@ -21,11 +21,13 @@ namespace PugetSound
      * - clean up code (ongoing effort)
      * - add whitelist?
      * - delete room when the last user leaves
-     * - add room history: user join / leave / dj / song (time | value | link?) (IRoomEvent : SongPlayedEvent, SongSkippedEvent, UserEvent)
      * - create playlist from room history
      * - IF the bug regarding playback sometime stopping for users is caused by their token expiring, fix that...
      * - figure out why the <hr> doesn't appear on the playback page -> actually it looks better without, just in general WHY
-     * - add error message for non-premium users on home page
+     *
+     * - add on error token check
+     * - add log event for song played for user
+     * - add retry play for 5xx error
      */
 
     public class Program

@@ -48,11 +48,13 @@ namespace PugetSound
         public void MemberJoin(RoomMember member)
         {
             if (_members.Any(x => x.UserName == member.UserName)) return;
+
             _members.Add(member);
             OnRoomMembersChanged?.Invoke(this, member.UserName);
 
             _roomEvents.Add(new UserEvent(member.UserName, member.FriendlyName, UserEventType.JoinedRoom));
-            _roomEvents.Add(new UserEvent(member.UserName, member.FriendlyName, UserEventType.BecameListener));
+
+            ToggleDj(member, false);
 
             if (_currentTrack != null) StartSongForMemberUgly(member);
         }
@@ -67,13 +69,9 @@ namespace PugetSound
         {
             member.IsDj = isDj;
 
-            _roomEvents.Add(new UserEvent(member.UserName, member.FriendlyName, isDj ? UserEventType.BecameDj : UserEventType.BecameListener));
+            member.DjOrderNumber = isDj ? _members.Where(x => x.IsDj).Max(y => y.DjOrderNumber) + 1 : -1;
 
-            foreach (var roomMember in _members)
-            {
-                if (roomMember.IsDj && roomMember.DjOrderNumber < 0) roomMember.DjOrderNumber = _members.Where(x => x.IsDj).Max(y => y.DjOrderNumber) + 1;
-                if (!roomMember.IsDj && roomMember.DjOrderNumber >= 0) roomMember.DjOrderNumber = -1;
-            }
+            _roomEvents.Add(new UserEvent(member.UserName, member.FriendlyName, isDj ? UserEventType.BecameDj : UserEventType.BecameListener));
 
             OnRoomMembersChanged?.Invoke(this, null);
         }
@@ -202,13 +200,15 @@ namespace PugetSound
 
                 var queueList = await api.GetPlaylistTracksAsync(playlist);
 
+                if (queueList.HasError()) throw new Exception($"couldn't load playlist {queueList.Error.Status} - {queueList.Error.Message}");
+
                 if (!queueList.Items.Any()) return null;
 
                 var track = queueList.Items.First().Track;
 
                 var err = await api.RemovePlaylistTrackAsync(playlist, new DeleteTrackUri(track.Uri, 0));
 
-                if (err.HasError()) throw new Exception("couldn't remove song from queue");
+                if (err.HasError()) throw new Exception($"couldn't remove song from queue {err.Error.Status} - {err.Error.Message}");
 
                 return track;
 
