@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using PugetSound.Auth;
 using PugetSound.Logic;
 using SpotifyAPI.Web;
 using SpotifyAPI.Web.Enums;
@@ -26,7 +27,7 @@ namespace PugetSound
 
         public IReadOnlyCollection<RoomMember> Members => _members;
 
-        private List<IRoomEvent> _roomEvents;
+        private readonly List<IRoomEvent> _roomEvents;
 
         public IReadOnlyCollection<IRoomEvent> RoomEvents => _roomEvents;
 
@@ -101,6 +102,47 @@ namespace PugetSound
             OnRoomMembersChanged?.Invoke(this, member.UserName);
         }
 
+        private async Task EnsureMember(RoomMember member)
+        {
+            try
+            {
+                var err = await member.MemberApi.GetPrivateProfileAsync();
+
+                if (!err.HasError()) return;
+
+                if (err.Error.Status == 401)
+                {
+                    // try to renew
+                    if (TokenRefreshService.Instance.TryGetRefreshToken(member.UserName, out var refreshToken))
+                    {
+                        var tr = await TokenRefreshService.Instance.TryRefreshTokenAsync(refreshToken);
+
+                        if (string.IsNullOrWhiteSpace(tr.access_token)) throw new Exception("Tried to renew access token but failed to do so");
+
+                        if (!string.IsNullOrWhiteSpace(tr.refresh_token)) TokenRefreshService.Instance.StoreToken(member.UserName, tr.refresh_token);
+
+                        member.MemberApi = tr.access_token.FromAccessToken();
+
+                        _logger.Log(LogLevel.Information, "Renewed access token for {Username}", member.UserName);
+                    }
+                    else
+                    {
+                        throw new Exception("Tried to renew access token, but couldn't find a refresh token");
+                    }
+                }
+                else
+                {
+                    // other issue
+                    err.ThrowOnError(nameof(EnsureMember));
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.Log(LogLevel.Warning, "Failed to ensure {Username} because {@Exception}", member.UserName, e);
+                throw;
+            }
+        }
+
         public async Task<RoomState> TryPlayNext(bool force = false)
         {
             while (true)
@@ -171,15 +213,21 @@ namespace PugetSound
         {
             try
             {
+                await EnsureMember(member);
+
                 var api = member.MemberApi;
+
                 var devices = await api.GetDevicesAsync();
-                if (devices.HasError()) throw new Exception($"Device error {devices.Error.Status} - {devices.Error.Message}");
+
+                devices.ThrowOnError(nameof(api.GetDevices));
+
                 if (!devices.Devices.Any()) throw new Exception("No devices available to play on!");
 
                 var device = devices.Devices.FirstOrDefault(x => x.IsActive) ?? devices.Devices.First();
 
-                var err = await api.ResumePlaybackAsync(deviceId:device.Id, uris: new List<string> { song.Uri }, offset: 0, positionMs: positionMs);
-                if (err.HasError()) throw new Exception($"Playback error {err.Error.Status} - {err.Error.Message}");
+                var resume = await api.ResumePlaybackAsync(deviceId:device.Id, uris: new List<string> { song.Uri }, offset: 0, positionMs: positionMs);
+
+                resume.ThrowOnError(nameof(api.ResumePlaybackAsync));
 
                 // we don't care if this one fails
                 await api.SetRepeatModeAsync(RepeatState.Off, device.Id);
@@ -196,19 +244,21 @@ namespace PugetSound
         {
             try
             {
+                await EnsureMember(member);
+
                 var api = member.MemberApi;
 
                 var queueList = await api.GetPlaylistTracksAsync(playlist);
 
-                if (queueList.HasError()) throw new Exception($"couldn't load playlist {queueList.Error.Status} - {queueList.Error.Message}");
+                queueList.ThrowOnError(nameof(api.GetPlaylistTracks));
 
                 if (!queueList.Items.Any()) return null;
 
                 var track = queueList.Items.First().Track;
 
-                var err = await api.RemovePlaylistTrackAsync(playlist, new DeleteTrackUri(track.Uri, 0));
+                var remove = await api.RemovePlaylistTrackAsync(playlist, new DeleteTrackUri(track.Uri, 0));
 
-                if (err.HasError()) throw new Exception($"couldn't remove song from queue {err.Error.Status} - {err.Error.Message}");
+                remove.ThrowOnError(nameof(api.RemovePlaylistTrackAsync));
 
                 return track;
 

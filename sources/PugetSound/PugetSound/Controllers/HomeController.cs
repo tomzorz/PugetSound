@@ -30,14 +30,7 @@ namespace PugetSound.Controllers
         private async Task<SpotifyWebAPI> GetApiForUser()
         {
             var accessToken = await HttpContext.GetTokenAsync(Constants.Spotify, "access_token");
-
-            var api = new SpotifyWebAPI
-            {
-                AccessToken = accessToken,
-                TokenType = "Bearer"
-            };
-
-            return api;
+            return accessToken.FromAccessToken();
         }
 
         public async Task<IActionResult> Index()

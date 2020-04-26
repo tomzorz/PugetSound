@@ -6,7 +6,7 @@ namespace PugetSound.Logic
     public class RoomMember
     {
         [JsonIgnore]
-        public SpotifyWebAPI MemberApi { get; }
+        public SpotifyWebAPI MemberApi { get; set; }
 
         public bool IsDj { get; set; }
 

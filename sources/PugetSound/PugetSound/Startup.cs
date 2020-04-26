@@ -118,6 +118,13 @@ namespace PugetSound
                   options.CallbackPath = "/callback";
                   options.Events.OnRemoteFailure = context => Task.CompletedTask; // TODO handle rip
                   options.SaveTokens = true;
+                  options.Events.OnTicketReceived = context => Task.CompletedTask; // maybe add log?
+                  options.Events.OnCreatingTicket = context =>
+                  {
+                      var username = context.Principal.Claims.GetSpotifyUsername();
+                      TokenRefreshService.Instance.StoreToken(username, context.RefreshToken);
+                      return Task.CompletedTask;
+                  };
               });
         }
 

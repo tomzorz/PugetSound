@@ -13,7 +13,7 @@ namespace PugetSound.Auth
 {
     public class TokenRefreshService
     {
-        private Dictionary<string, string> _usernameToRefreshTokenStore;
+        private readonly Dictionary<string, string> _usernameToRefreshTokenStore;
 
         private TokenRefreshService()
         {
