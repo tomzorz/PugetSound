@@ -1,22 +1,16 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
 using System.Threading.Tasks;
-using AspNet.Security.OAuth.Spotify;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Newtonsoft.Json;
+using Microsoft.Extensions.Logging;
 using PugetSound.Auth;
 using PugetSound.Hubs;
 using PugetSound.Logic;
@@ -43,7 +37,13 @@ namespace PugetSound
 
             services.AddSignalR();
 
-            TokenRefreshService.Instance.SetAccessKeys(Configuration["SpotifyClientId"], Configuration["SpotifyClientSecret"]);
+            services.AddSingleton(serviceProvider =>
+            {
+                var logger = serviceProvider.GetService<ILogger<SpotifyAccessService>>();
+                var sas = new SpotifyAccessService(logger);
+                sas.SetAccessKeys(Configuration["SpotifyClientId"], Configuration["SpotifyClientSecret"]);
+                return sas;
+            });
 
             services.AddAuthentication(o => o.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme)
               .AddCookie(options =>
@@ -52,6 +52,8 @@ namespace PugetSound
                   {
                       OnValidatePrincipal = async context =>
                       {
+                          var sas = context.HttpContext.RequestServices.GetService<SpotifyAccessService>();
+
                           //check to see if user is authenticated first
                           if (context.Principal.Identity.IsAuthenticated)
                           {
@@ -74,22 +76,28 @@ namespace PugetSound
                                   if (expires < DateTime.Now)
                                   {
                                       //token is expired, let's attempt to renew
-                                      var tokenResponse = await TokenRefreshService.Instance.TryRefreshTokenAsync(refreshToken.Value);
+                                      var tokenResponse = await sas.TryRefreshTokenAsync(refreshToken.Value);
 
                                       //set new token values
                                       if (string.IsNullOrWhiteSpace(tokenResponse.refresh_token)) refreshToken.Value = tokenResponse.refresh_token;
                                       accessToken.Value = tokenResponse.access_token;
+
                                       //set new expiration date
                                       var newExpires = DateTime.UtcNow + TimeSpan.FromSeconds(tokenResponse.expires_in);
                                       exp.Value = newExpires.ToString("o", CultureInfo.InvariantCulture);
+
                                       //set tokens in auth properties
                                       context.Properties.StoreTokens(tokens);
+
+                                      // set new api
+                                      sas.StoreMemberApi(context.Principal.Claims.GetSpotifyUsername(), tokenResponse.access_token.FromAccessToken());
+
                                       //trigger context to renew cookie with new token values
                                       context.ShouldRenew = true;
                                   }
 
                                   // store latest tokens
-                                  TokenRefreshService.Instance.StoreToken(context.Principal.Claims.GetSpotifyUsername(), refreshToken.Value);
+                                  sas.StoreToken(context.Principal.Claims.GetSpotifyUsername(), refreshToken.Value);
                               }
                               catch (Exception e)
                               {
@@ -122,7 +130,9 @@ namespace PugetSound
                   options.Events.OnCreatingTicket = context =>
                   {
                       var username = context.Principal.Claims.GetSpotifyUsername();
-                      TokenRefreshService.Instance.StoreToken(username, context.RefreshToken);
+                      var sas = context.HttpContext.RequestServices.GetService<SpotifyAccessService>();
+                      sas.StoreToken(username, context.RefreshToken);
+                      sas.StoreMemberApi(username, context.AccessToken.FromAccessToken());
                       return Task.CompletedTask;
                   };
               });

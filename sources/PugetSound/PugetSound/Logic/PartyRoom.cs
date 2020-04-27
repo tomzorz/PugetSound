@@ -15,6 +15,7 @@ namespace PugetSound
     public class PartyRoom
     {
         private readonly ILogger _logger;
+        private readonly SpotifyAccessService _spotifyAccessService;
         private DateTimeOffset _handledUntil;
         private int _currentDjNumber;
         private FullTrack _currentTrack;
@@ -31,9 +32,10 @@ namespace PugetSound
 
         public IReadOnlyCollection<IRoomEvent> RoomEvents => _roomEvents;
 
-        public PartyRoom(string roomId, ILogger logger)
+        public PartyRoom(string roomId, ILogger logger, SpotifyAccessService spotifyAccessService)
         {
             _logger = logger;
+            _spotifyAccessService = spotifyAccessService;
             RoomId = roomId;
             _members = new List<RoomMember>();
             _roomEvents = new List<IRoomEvent>();
@@ -100,47 +102,6 @@ namespace PugetSound
             _roomEvents.Add(new UserEvent(member.UserName, member.FriendlyName, UserEventType.LeftRoom));
 
             OnRoomMembersChanged?.Invoke(this, member.UserName);
-        }
-
-        private async Task EnsureMember(RoomMember member)
-        {
-            try
-            {
-                var err = await member.MemberApi.GetPrivateProfileAsync();
-
-                if (!err.HasError()) return;
-
-                if (err.Error.Status == 401)
-                {
-                    // try to renew
-                    if (TokenRefreshService.Instance.TryGetRefreshToken(member.UserName, out var refreshToken))
-                    {
-                        var tr = await TokenRefreshService.Instance.TryRefreshTokenAsync(refreshToken);
-
-                        if (string.IsNullOrWhiteSpace(tr.access_token)) throw new Exception("Tried to renew access token but failed to do so");
-
-                        if (!string.IsNullOrWhiteSpace(tr.refresh_token)) TokenRefreshService.Instance.StoreToken(member.UserName, tr.refresh_token);
-
-                        member.MemberApi = tr.access_token.FromAccessToken();
-
-                        _logger.Log(LogLevel.Information, "Renewed access token for {Username}", member.UserName);
-                    }
-                    else
-                    {
-                        throw new Exception("Tried to renew access token, but couldn't find a refresh token");
-                    }
-                }
-                else
-                {
-                    // other issue
-                    err.ThrowOnError(nameof(EnsureMember));
-                }
-            }
-            catch (Exception e)
-            {
-                _logger.Log(LogLevel.Warning, "Failed to ensure {Username} because {@Exception}", member.UserName, e);
-                throw;
-            }
         }
 
         public async Task<RoomState> TryPlayNext(bool force = false)
@@ -213,9 +174,7 @@ namespace PugetSound
         {
             try
             {
-                await EnsureMember(member);
-
-                var api = member.MemberApi;
+                var api = await _spotifyAccessService.TryGetMemberApi(member.UserName);
 
                 var devices = await api.GetDevicesAsync();
 
@@ -244,9 +203,7 @@ namespace PugetSound
         {
             try
             {
-                await EnsureMember(member);
-
-                var api = member.MemberApi;
+                var api = await _spotifyAccessService.TryGetMemberApi(member.UserName);
 
                 var queueList = await api.GetPlaylistTracksAsync(playlist);
 

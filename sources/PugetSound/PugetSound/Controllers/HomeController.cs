@@ -20,22 +20,18 @@ namespace PugetSound.Controllers
     {
         private readonly RoomService _roomService;
         private readonly ILogger<HomeController> _logger;
+        private readonly SpotifyAccessService _spotifyAccessService;
 
-        public HomeController(RoomService roomService, ILogger<HomeController> _logger)
+        public HomeController(RoomService roomService, ILogger<HomeController> _logger, SpotifyAccessService spotifyAccessService)
         {
             _roomService = roomService;
             this._logger = _logger;
-        }
-
-        private async Task<SpotifyWebAPI> GetApiForUser()
-        {
-            var accessToken = await HttpContext.GetTokenAsync(Constants.Spotify, "access_token");
-            return accessToken.FromAccessToken();
+            _spotifyAccessService = spotifyAccessService;
         }
 
         public async Task<IActionResult> Index()
         {
-            var api = await GetApiForUser();
+            var api = await _spotifyAccessService.TryGetMemberApi(HttpContext.User.Claims.GetSpotifyUsername());
 
             var username = HttpContext.User.Claims.GetSpotifyUsername();
 
@@ -136,7 +132,7 @@ namespace PugetSound.Controllers
         [HttpPost]
         public async Task<IActionResult> Room(IndexModel room)
         {
-            var api = await GetApiForUser();
+            var api = await _spotifyAccessService.TryGetMemberApi(HttpContext.User.Claims.GetSpotifyUsername());
 
             var username = HttpContext.User.Claims.GetSpotifyUsername();
 
@@ -162,7 +158,7 @@ namespace PugetSound.Controllers
 
             _logger.Log(LogLevel.Information, "{Page} loaded for {Username}", "Room", username);
 
-            var member = new RoomMember(username, HttpContext.User.Claims.GetSpotifyFriendlyName(), room.PlaylistId, api);
+            var member = new RoomMember(username, HttpContext.User.Claims.GetSpotifyFriendlyName(), room.PlaylistId);
             party.MemberJoin(member);
 
             return View(new RoomModel

@@ -5,9 +5,6 @@ namespace PugetSound.Logic
 {
     public class RoomMember
     {
-        [JsonIgnore]
-        public SpotifyWebAPI MemberApi { get; set; }
-
         public bool IsDj { get; set; }
 
         public string UserName { get; }
@@ -20,12 +17,11 @@ namespace PugetSound.Logic
 
         public int DjOrderNumber { get; set; }
 
-        public RoomMember(string username, string friendlyName, string playlistId, SpotifyWebAPI memberApi)
+        public RoomMember(string username, string friendlyName, string playlistId)
         {
             UserName = username;
             FriendlyName = friendlyName;
             PlaylistId = playlistId;
-            MemberApi = memberApi;
         }
     }
 }

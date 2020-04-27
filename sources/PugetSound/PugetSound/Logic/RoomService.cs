@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
+using PugetSound.Auth;
 using PugetSound.Hubs;
 
 namespace PugetSound.Logic
@@ -12,12 +13,14 @@ namespace PugetSound.Logic
         private readonly IHubContext<RoomHub, IRoomHubInterface> _roomHubContext;
         private readonly ILogger<RoomService> _logger;
         private readonly ILoggerFactory _loggerFactory;
+        private readonly SpotifyAccessService _spotifyAccessService;
 
-        public RoomService(IHubContext<RoomHub, IRoomHubInterface> roomHubContext, ILogger<RoomService> logger, ILoggerFactory loggerFactory)
+        public RoomService(IHubContext<RoomHub, IRoomHubInterface> roomHubContext, ILogger<RoomService> logger, ILoggerFactory loggerFactory, SpotifyAccessService spotifyAccessService)
         {
             _roomHubContext = roomHubContext;
             this._logger = logger;
             _loggerFactory = loggerFactory;
+            _spotifyAccessService = spotifyAccessService;
             _rooms = new Dictionary<string, PartyRoom>();
             _memberRoomCache = new Dictionary<string, PartyRoom>();
         }
@@ -38,7 +41,7 @@ namespace PugetSound.Logic
             if (_rooms.ContainsKey(roomId)) return _rooms[roomId];
 
             var roomLogger = _loggerFactory.CreateLogger(typeof(PartyRoom));
-            var room = new PartyRoom(roomId, roomLogger);
+            var room = new PartyRoom(roomId, roomLogger, _spotifyAccessService);
             room.OnRoomMembersChanged += Room_OnRoomMembersChanged;
             _rooms[roomId] = room;
 

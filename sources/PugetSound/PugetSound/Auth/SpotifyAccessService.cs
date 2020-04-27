@@ -7,24 +7,29 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using AspNet.Security.OAuth.Spotify;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using PugetSound.Logic;
+using SpotifyAPI.Web;
 
 namespace PugetSound.Auth
 {
-    public class TokenRefreshService
+    public class SpotifyAccessService
     {
         private readonly Dictionary<string, string> _usernameToRefreshTokenStore;
 
-        private TokenRefreshService()
+        private readonly Dictionary<string, (DateTimeOffset expiresAt, SpotifyWebAPI memberApi)> _usernameToApiStore;
+
+        public SpotifyAccessService(ILogger<SpotifyAccessService> logger)
         {
+            _logger = logger;
             _usernameToRefreshTokenStore = new Dictionary<string, string>();
+            _usernameToApiStore = new Dictionary<string, (DateTimeOffset expiresAt, SpotifyWebAPI memberApi)>();
         }
 
-        private static TokenRefreshService _instance;
         private string _clientId;
         private string _clientSecret;
-
-        public static TokenRefreshService Instance => _instance ??= new TokenRefreshService();
+        private readonly ILogger<SpotifyAccessService> _logger;
 
         public void SetAccessKeys(string clientId, string clientSecret)
         {
@@ -77,6 +82,42 @@ namespace PugetSound.Auth
             Debug.WriteLine(resultBody);
             throw new Exception("TokenResponse AuthToken was empty!");
 
+        }
+
+        public void StoreMemberApi(string username, SpotifyWebAPI api)
+        {
+            _usernameToApiStore[username] = (DateTimeOffset.Now.AddMinutes(59.0), api);
+        }
+
+        public async Task<SpotifyWebAPI> TryGetMemberApi(string username)
+        {
+            // we have one cached
+            if(_usernameToApiStore.ContainsKey(username))
+            {
+                var (expiresAt, api) = _usernameToApiStore[username];
+
+                // we have a valid api, return it
+                if (expiresAt > DateTimeOffset.Now) return api;
+
+                // otherwise clear it out and continue
+                _usernameToApiStore.Remove(username);
+            }
+
+            // try refresh to get a new one
+            if (!TryGetRefreshToken(username, out var refreshToken)) throw new Exception("Tried to renew access token, but couldn't find a refresh token");
+
+            // actual refresh logic
+            var tr = await TryRefreshTokenAsync(refreshToken);
+
+            if (string.IsNullOrWhiteSpace(tr.access_token)) throw new Exception("Tried to renew access token but failed to do so");
+
+            if (!string.IsNullOrWhiteSpace(tr.refresh_token)) StoreToken(username, tr.refresh_token);
+
+            _usernameToApiStore[username] = (DateTimeOffset.Now.AddMinutes(59.0), tr.access_token.FromAccessToken());
+
+            _logger.Log(LogLevel.Information, "Renewed access token for {Username}", username);
+
+            return _usernameToApiStore[username].memberApi;
         }
     }
 }

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using PugetSound.Auth;
 using PugetSound.Logic;
 using Serilog;
 using Serilog.Events;
@@ -23,9 +24,9 @@ namespace PugetSound
      * - delete room when the last user leaves
      * - create playlist from room history
      * - figure out why the <hr> doesn't appear on the playback page -> actually it looks better without, just in general WHY
-     * - refactor web api out from the PartyMember
      * - add retry play for 5xx error
      * - add disabled button state
+     * - add log event for storing refresh token (check if null, whitespace or the same)
      */
 
     public class Program
