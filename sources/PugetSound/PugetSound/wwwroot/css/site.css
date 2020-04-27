@@ -89,6 +89,11 @@ input[type=button], input[type=submit], input[type=reset] {
     padding: 8px 16px;
 }
 
+input[type=button]:disabled, input[type=submit]:disabled, input[type=reset]:disabled {
+    background-color: #7e9770;
+    color: #e1e1e1;
+}
+
 input[type=text] {
     border-radius: 500px;
     padding-left: 8px;
@@ -155,7 +160,7 @@ a:hover {
 }
 
 hr {
-    border: 2px solid #1ed760;
+    border: 2px transparent;
     margin: 2rem 0;
 }
 
