@@ -17,8 +17,13 @@ namespace PugetSound
         private readonly ILogger _logger;
         private readonly SpotifyAccessService _spotifyAccessService;
         private DateTimeOffset _handledUntil;
+        private DateTimeOffset _timeSinceEmpty;
         private int _currentDjNumber;
         private FullTrack _currentTrack;
+
+        private readonly DateTimeOffset CustomFutureDateTimeOffset = new DateTimeOffset(9999, 1, 1, 0, 0, 0, TimeSpan.Zero);
+
+        public DateTimeOffset TimeSinceEmpty => _timeSinceEmpty;
 
         public string RoomId { get; }
 
@@ -39,6 +44,7 @@ namespace PugetSound
             RoomId = roomId;
             _members = new List<RoomMember>();
             _roomEvents = new List<IRoomEvent>();
+            _timeSinceEmpty = CustomFutureDateTimeOffset;
 
             _handledUntil = DateTimeOffset.Now;
             _currentDjNumber = -1;
@@ -60,6 +66,8 @@ namespace PugetSound
             ToggleDj(member, false);
 
             if (_currentTrack != null) StartSongForMemberUgly(member);
+
+            _timeSinceEmpty = CustomFutureDateTimeOffset;
         }
 
         private async void StartSongForMemberUgly(RoomMember member)
@@ -102,6 +110,12 @@ namespace PugetSound
             _roomEvents.Add(new UserEvent(member.UserName, member.FriendlyName, UserEventType.LeftRoom));
 
             OnRoomMembersChanged?.Invoke(this, member.UserName);
+
+            // this was the last member to leave
+            if (!_members.Any())
+            {
+                _timeSinceEmpty = DateTimeOffset.Now;
+            }
         }
 
         public async Task<RoomState> TryPlayNext(bool force = false)

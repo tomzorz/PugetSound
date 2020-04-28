@@ -21,7 +21,6 @@ namespace PugetSound
      * - add phone / pc webapp meta info maybe
      * - clean up code (ongoing effort)
      * - add whitelist?
-     * - delete room when the last user leaves
      * - create playlist from room history
      * - add retry play for 5xx error
      */

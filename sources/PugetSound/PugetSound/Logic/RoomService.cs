@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
@@ -94,16 +96,40 @@ namespace PugetSound.Logic
 
         public async Task ProcessRoomsAsync()
         {
+            var roomsForCleanup = new List<string>();
+
             foreach (var partyRoom in _rooms)
             {
-                var roomState = await partyRoom.Value.TryPlayNext();
+                // everyone left for 1h+, remove room
+                if (partyRoom.Value.TimeSinceEmpty + TimeSpan.FromMinutes(60) < DateTimeOffset.Now)
+                {
+                    partyRoom.Value.OnRoomMembersChanged -= Room_OnRoomMembersChanged;
+                    roomsForCleanup.Add(partyRoom.Value.RoomId);
+                    continue;
+                }
 
-                if (!roomState.IsPlayingSong) continue;
+                try
+                {
+                    var roomState = await partyRoom.Value.TryPlayNext();
 
-                _logger.Log(LogLevel.Information, "{Room} playing song {SongTitle} by {SongArtist}, queued by {Username}",
-                    partyRoom.Value.RoomId, roomState.CurrentSongTitle, roomState.CurrentSongArtist, roomState.CurrentDjUsername);
+                    if (!roomState.IsPlayingSong) continue;
 
-                await _roomHubContext.Clients.Group(partyRoom.Key).SongChanged(roomState);
+                    _logger.Log(LogLevel.Information, "{Room} playing song {SongTitle} by {SongArtist}, queued by {Username}",
+                        partyRoom.Value.RoomId, roomState.CurrentSongTitle, roomState.CurrentSongArtist, roomState.CurrentDjUsername);
+
+                    await _roomHubContext.Clients.Group(partyRoom.Key).SongChanged(roomState);
+                }
+                catch (Exception e)
+                {
+                    _logger.Log(LogLevel.Warning, "Error during processing {Room} because {@Exception}", partyRoom.Value.RoomId, e);
+                }
+            }
+
+            // clean up old rooms
+            foreach (var roomId in roomsForCleanup)
+            {
+                _rooms.Remove(roomId);
+                _logger.Log(LogLevel.Information, "Cleaned up empty room {Room}", roomId);
             }
         }
     }

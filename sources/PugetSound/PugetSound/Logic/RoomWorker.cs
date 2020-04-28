@@ -21,12 +21,8 @@ namespace PugetSound.Logic
             {
                 await _roomService.ProcessRoomsAsync();
 
-                Debug.WriteLine("RoomWorker poke");
-
                 await Task.Delay(TimeSpan.FromSeconds(3), stoppingToken);
             }
-
-            // TODO cleanup?
         }
     }
 }
