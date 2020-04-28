@@ -89,12 +89,12 @@ namespace PugetSound
                                       //set tokens in auth properties
                                       context.Properties.StoreTokens(tokens);
 
-                                      // set new api
-                                      sas.StoreMemberApi(context.Principal.Claims.GetSpotifyUsername(), tokenResponse.access_token.FromAccessToken());
-
                                       //trigger context to renew cookie with new token values
                                       context.ShouldRenew = true;
                                   }
+
+                                  // set new api
+                                  sas.StoreMemberApi(context.Principal.Claims.GetSpotifyUsername(), accessToken.Value.FromAccessToken(), expires);
 
                                   // store latest tokens
                                   sas.StoreToken(context.Principal.Claims.GetSpotifyUsername(), refreshToken.Value);

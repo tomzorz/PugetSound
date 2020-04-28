@@ -84,9 +84,9 @@ namespace PugetSound.Auth
 
         }
 
-        public void StoreMemberApi(string username, SpotifyWebAPI api)
+        public void StoreMemberApi(string username, SpotifyWebAPI api, DateTimeOffset? expirationOverride = null)
         {
-            _usernameToApiStore[username] = (DateTimeOffset.Now.AddMinutes(59.0), api);
+            _usernameToApiStore[username] = (expirationOverride ?? DateTimeOffset.Now.AddMinutes(59.0), api);
         }
 
         public async Task<SpotifyWebAPI> TryGetMemberApi(string username)
