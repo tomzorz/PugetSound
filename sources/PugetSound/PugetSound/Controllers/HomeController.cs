@@ -29,7 +29,8 @@ namespace PugetSound.Controllers
             _spotifyAccessService = spotifyAccessService;
         }
 
-        public async Task<IActionResult> Index()
+
+        public async Task<IActionResult> Index(string join = null)
         {
             var api = await _spotifyAccessService.TryGetMemberApi(HttpContext.User.Claims.GetSpotifyUsername());
 
@@ -103,7 +104,7 @@ namespace PugetSound.Controllers
                 PlaylistMessage = playlistMessage,
                 PlaylistId = queuePlaylist,
                 IsAlreadyInRoom = alreadyInRoom,
-                RoomName = alreadyInRoom ? prevRoom.RoomId : ""
+                RoomName = alreadyInRoom ? prevRoom.RoomId : join ?? ""
             });
         }
 

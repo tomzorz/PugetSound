@@ -171,3 +171,49 @@ hr {
 .blue-border {
     border: 2px dotted #999999;
 }
+
+h3 a[data-toggle="collapse"] {
+    color: white;
+}
+
+h3 a[data-toggle="collapse"]:hover {
+    color: #e1e1e1;
+    text-decoration: none;
+}
+
+
+h3 a[data-toggle="collapse"]::after {
+    font-size: 60%;
+    font-weight: lighter;
+    margin-left: 1rem;
+    content: "(close 👇)";
+}
+
+h3 a[data-toggle="collapse"].collapsed::after {
+    font-size: 60%;
+    font-weight: lighter;
+    margin-left: 1rem;
+    content: "(expand 👉)";
+}
+
+.footer {
+    line-height: 1.5;
+}
+
+.footer span {
+    display: block;
+    margin: 0.7rem 0;
+}
+
+.footer span span {
+    display: inline;
+}
+
+.footer span.footer-debug {
+    color: #414141;
+    font-family: monospace;
+}
+
+.footer span.footer-info {
+    color: #6c757d;
+}

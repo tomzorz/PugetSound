@@ -4,6 +4,7 @@
 @model PugetSound.Models.IndexModel
 @{
     ViewData["Title"] = "PugetSound";
+    ViewData["Page"] = "home";
 }
 
 <div class="container">
@@ -23,22 +24,37 @@
                     <p>You've joined room <strong>@Model.RoomName</strong> previously, so that has been pre-filled below. Just press [Enter room] to continue.</p>
                     <p class="mb-0">If you enter a different room name you'll leave your current one.</p>
                 </div>
+            } else if (!string.IsNullOrWhiteSpace(Model.RoomName))
+            {
+                <div class="alert alert-info">
+                    <p class="mb-0">You received a deeplink for room <strong>@Model.RoomName</strong>, so that has been pre-filled below. Just press [Enter room] to join.</p>
+                </div>
             }
             <p><em>Letters and hyphens allowed. On room creation spaces will be converted to hyphens, other disallowed will be removed. 3 characters minimum.</em></p>
             <form method="post" asp-contoller="Index" asp-action="Room">
-                <input type="hidden" asp-for="PlaylistId" value="@Model.PlaylistId"/>
-                <input asp-for="RoomName" pattern="[-a-zA-Z]{3,}" value="@Model.RoomName"/>
-                <input type="submit" value="Enter room"/>
+                <input type="hidden" asp-for="PlaylistId" value="@Model.PlaylistId" />
+                <input asp-for="RoomName" pattern="[-a-zA-Z]{3,}" value="@Model.RoomName" />
+                <input type="submit" value="Enter room" />
             </form>
             <hr />
-            <h3 class="mt-5">How it works</h3>
-            <p>PugetSound creates a playlist called "PugetSound Queue" in your Spotify account. When you join a room and become a DJ, you'll take turns to play a song for the room members. When it's your turn, the first song from your queue playlist will be played for everyone, and it'll be also removed from said playlist. (Therefore it's not recommended to use it for other purposes.)</p>
-            <p>Unlike other solutions, PugetSound handles the synchronization and queueing on the backend, so it's not necessary to keep the tab open - as long as you have a Spotify player open on a device. This also means that you need to re-enter the room and explicitly press the [Leave room] button to retake control of your Spotify account.</p>
-            <h3>Requirements</h3>
-            <p>1. Spotify Premium: Apparently a premium account is required to play songs via the API.</p>
-            <p>2. Keeping <em>a</em> Spotify player open <em>somewhere</em>. This can be the desktop client, your phone or the web app. Doesn't matter, but the music needs to come from somewhere.</p>
-            <h3>Everything else</h3>
-            <p>This is an open source project <a href="https://github.com/tomzorz/PugetSound">available on GitHub</a>!</p>
+            <h3 class="mt-5"><a data-toggle="collapse" href="#area-howitworks" role="button" aria-expanded="true" aria-controls="area-howitworks">How it works</a></h3>
+            <div id="area-howitworks" class="collapse show">
+                <p>PugetSound creates a playlist called "PugetSound Queue" in your Spotify account. When you join a room and become a DJ, you'll take turns to play a song for the room members. When it's your turn, the first song from your queue playlist will be played for everyone, and it'll be also removed from said playlist. (Therefore it's not recommended to use it for other purposes.)</p>
+                <p>Unlike other solutions, PugetSound handles the synchronization and queueing on the backend, so it's not necessary to keep the tab open - as long as you have a Spotify player open on a device. This also means that you need to re-enter the room and explicitly press the [Leave room] button to retake control of your Spotify account.</p>
+            </div>
+            <h3><a data-toggle="collapse" href="#area-reqs" role="button" aria-expanded="false" aria-controls="area-reqs">Requirements</a></h3>
+            <div id="area-reqs" class="collapse">
+                <p>1. Spotify Premium: Apparently a premium account is required to play songs via the API.</p>
+                <p>2. Keeping <em>a</em> Spotify player open <em>somewhere</em>. This can be the desktop client, your phone or the web app. Doesn't matter, but the music needs to come from somewhere.</p>
+            </div>
+            <h3><a data-toggle="collapse" href="#area-knownissues" role="button" aria-expanded="false" aria-controls="area-knownissues">Known issues</a></h3>
+            <div id="area-knownissues" class="collapse">
+                <p>Sometimes we don't get a refresh token while authenticating, which causes all Spotify related actions to fail after your access token expires (normally 1 hour). To solve this, just leave the room, refresh this page, and join again.</p>
+            </div>
+            <h3><a data-toggle="collapse" href="#area-else" role="button" aria-expanded="false" aria-controls="area-else">Everything else</a></h3>
+            <div id="area-else" class="collapse">
+                <p>This is an open source project <a href="https://github.com/tomzorz/PugetSound">available on GitHub</a>!</p>
+            </div>
         </div>
     </div>
 </div>
