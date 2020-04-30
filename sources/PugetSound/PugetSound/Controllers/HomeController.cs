@@ -48,9 +48,10 @@ namespace PugetSound.Controllers
             var playlists = api.GetUserPlaylists(profile.Id, paginationLimit, offset);
             offset += paginationLimit;
 
-            while (playlists.HasNextPage())
+            do
             {
-                var playlist = playlists.Items.FirstOrDefault(x => !x.Collaborative && !x.Public && x.Name == Constants.QueuePlaylistName);
+                var playlist = playlists.Items.FirstOrDefault(x =>
+                    !x.Collaborative && !x.Public && x.Name == Constants.QueuePlaylistName);
 
                 // found it
                 if (playlist != null)
@@ -63,7 +64,7 @@ namespace PugetSound.Controllers
 
                 playlists = api.GetUserPlaylists(profile.Id, paginationLimit, offset);
                 offset += paginationLimit;
-            }
+            } while (playlists.HasNextPage());
 
             // if we didn't find the playlist create it
             if (string.IsNullOrWhiteSpace(queuePlaylist))
