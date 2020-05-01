@@ -18,11 +18,18 @@ namespace PugetSound
     // TODO
 
     /*
+     * FEATURES
      * - add phone / pc webapp meta info maybe
      * - clean up code (ongoing effort)
      * - add whitelist?
      * - create playlist from room history
+     *
+     * IMPROVEMENTS
      * - add retry play for 5xx error
+     * - add BETA badge to top right corner
+     *
+     * BUGS
+     * - new footer broken on mobile?
      */
 
     public class Program
