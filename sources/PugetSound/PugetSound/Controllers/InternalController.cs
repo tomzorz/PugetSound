@@ -16,13 +16,13 @@ using SpotifyAPI.Web;
 namespace PugetSound.Controllers
 {
     [Authorize(AuthenticationSchemes = "Spotify")]
-    public class HomeController : Controller
+    public class InternalController : Controller
     {
         private readonly RoomService _roomService;
-        private readonly ILogger<HomeController> _logger;
+        private readonly ILogger<InternalController> _logger;
         private readonly SpotifyAccessService _spotifyAccessService;
 
-        public HomeController(RoomService roomService, ILogger<HomeController> _logger, SpotifyAccessService spotifyAccessService)
+        public InternalController(RoomService roomService, ILogger<InternalController> _logger, SpotifyAccessService spotifyAccessService)
         {
             _roomService = roomService;
             this._logger = _logger;
@@ -119,7 +119,7 @@ namespace PugetSound.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        [Route("/RoomHistory/{room}")]
+        [Route("internal/roomhistory/{room}")]
         public IActionResult RoomHistory(string room)
         {
             var roomEvents = _roomService.TryGetRoomEvents(room);

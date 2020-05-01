@@ -1,0 +1,42 @@
+﻿@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@using PugetSound
+@using PugetSound.Logic
+@model PugetSound.Models.IndexModel
+@{
+    ViewData["Title"] = "PugetSound";
+    ViewData["Page"] = "internal/entry";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h1>Welcome <span>@Model.FriendlyName</span></h1>
+            <div class="mt-3 mb-3 pl-3 border-left border-success">
+                <p>You are signed into Spotify with the username: <a href="@Model.ProfileLink">@Model.UserName</a></p>
+                <p class="mb-0">@Model.PlaylistMessage<a href="@Model.PlaylistLink">@Constants.QueuePlaylistName</a></p>
+            </div>
+            <hr />
+            <h2>Join or create room</h2>
+            @if (Model.IsAlreadyInRoom)
+            {
+                <div class="alert alert-info">
+                    <p>You've joined room <strong>@Model.RoomName</strong> previously, so that has been pre-filled below. Just press [Enter room] to continue.</p>
+                    <p class="mb-0">If you enter a different room name you'll leave your current one.</p>
+                </div>
+            }
+            else if (!string.IsNullOrWhiteSpace(Model.RoomName))
+            {
+                <div class="alert alert-info">
+                    <p class="mb-0">You received a deeplink for room <strong>@Model.RoomName</strong>, so that has been pre-filled below. Just press [Enter room] to join.</p>
+                </div>
+            }
+            <p><em>Letters and hyphens allowed. On room creation spaces will be converted to hyphens, other disallowed will be removed. 3 characters minimum.</em></p>
+            <form method="post" asp-contoller="Index" asp-action="Room" class="form-room-join">
+                <input type="hidden" asp-for="PlaylistId" value="@Model.PlaylistId" />
+                <input asp-for="RoomName" pattern="[-a-zA-Z]{3,}" value="@Model.RoomName" class="mr-3" />
+                <input type="submit" value="Enter room" />
+            </form>
+            <p class="mt-3">Don't forget to keep <em>a</em> Spotify player open <em>somewhere</em>. This can be the desktop client, your phone or the web app. Doesn't matter, but the music needs to come from somewhere.</p>
+        </div>
+    </div>
+</div>

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -14,6 +15,7 @@ using Microsoft.Extensions.Logging;
 using PugetSound.Auth;
 using PugetSound.Hubs;
 using PugetSound.Logic;
+using PugetSound.Routing;
 using SpotifyAPI.Web;
 using SpotifyAPI.Web.Enums;
 
@@ -33,7 +35,10 @@ namespace PugetSound
         {
             services.AddSingleton<RoomService>();
 
-            services.AddControllersWithViews();
+            services.AddControllersWithViews(configure =>
+            {
+                configure.Conventions.Add(new RouteTokenTransformerConvention(new LowerCaseParameterTransformer()));
+            });
 
             services.AddSignalR();
 
@@ -160,11 +165,19 @@ namespace PugetSound
             app.UseAuthentication();
             app.UseAuthorization();
 
-
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapControllerRoute(name: "internal",
+                    pattern: "internal/{action=Index}/{id?}",
+                    defaults: new { controller = "Internal", action = "Index" });
+
+                endpoints.MapControllerRoute(name: "external",
+                    pattern: "{action=Index}/{id?}",
+                    defaults: new { controller = "External", action = "Index" });
+
                 //endpoints.MapControllerRoute(name: "default", pattern: "{controller=Home}/{action=Index}/{id?}");
-                endpoints.MapControllerRoute(name: "default", pattern: "{action=Index}/{id?}", defaults: new { controller = "Home", action = "Index"});
+                //endpoints.MapControllerRoute(name: "default", pattern: "{controller}{action=Index}/{id?}", defaults: new { controller = "Home", action = "Index"});
+
                 endpoints.MapHub<RoomHub>("/roomhub");
             });
         }

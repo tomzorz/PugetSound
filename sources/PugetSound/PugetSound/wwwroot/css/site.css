@@ -203,6 +203,7 @@ h3 a[data-toggle="collapse"].collapsed::after {
 .footer span {
     display: block;
     margin: 0.7rem 0;
+    white-space: normal;
 }
 
 .footer span span {
@@ -216,4 +217,126 @@ h3 a[data-toggle="collapse"].collapsed::after {
 
 .footer span.footer-info {
     color: #6c757d;
+}
+
+.external-welcome-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.external-welcome-wrapper .headerlogo {
+    margin-bottom: 3rem;
+}
+
+.external-welcome-wrapper .headerlogo, .external-welcome-wrapper .links {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.external-welcome-wrapper .headerlogo h1 {
+    font-size: 72px;
+}
+
+.external-welcome-wrapper .headerlogo img {
+    margin: 20px;
+}
+
+.external-welcome-wrapper p {
+    font-size: 1.5rem;
+}
+
+.external-welcome-wrapper .bigbutton {
+    margin: 3rem 0;
+    padding: 20px 40px;
+    background-color: #1ed760;
+    border: none;
+    color: white;
+    border-radius: 30px;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.external-welcome-wrapper .bigbutton:hover {
+    text-decoration: none;
+    color: #e1e1e1;
+    background-color: #008000;
+}
+
+.external-welcome-wrapper .links a {
+    margin: 10px 20px;
+}
+
+.form-room-join {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    margin: 2rem 0;
+}
+
+.form-room-join input[type="text"] {
+    font-size: 2rem;
+    padding-left: 1rem;
+}
+
+.form-room-join input[type="submit"] {
+    font-size: 1.5rem;
+    padding: 0.5rem 1.5rem;
+}
+
+.page-howitworks a {
+    color: white;
+}
+
+@keyframes flashing-yellow-border {
+    0% {
+        border: 2px solid yellow;
+    }
+
+    49% {
+        border: 2px solid yellow;
+    }
+
+    50% {
+        border: 2px dotted #999999;
+    }
+
+    100% {
+        border: 2px dotted #999999;
+    }
+}
+
+.flashing-border {
+    animation-name: flashing-yellow-border;
+    animation-duration: 1s;
+    animation-iteration-count: 5;
+    animation-delay: 2s;
+}
+
+@media screen and (max-width: 600px) {
+    .external-welcome-wrapper {
+        display: block;
+    }
+
+    .external-welcome-wrapper .headerlogo, .external-welcome-wrapper .links {
+        display: block;
+        text-align: center;
+    }
+
+    .external-welcome-wrapper .headerlogo h1 {
+        font-size: 40px;
+    }
+
+    .external-welcome-wrapper .bigbutton {
+        display: block;
+    }
+
+    .footer {
+        margin-top: 3rem;
+    }
 }
