@@ -16,6 +16,7 @@ using PugetSound.Auth;
 using PugetSound.Hubs;
 using PugetSound.Logic;
 using PugetSound.Routing;
+using Serilog;
 using SpotifyAPI.Web;
 using SpotifyAPI.Web.Enums;
 
@@ -159,6 +160,8 @@ namespace PugetSound
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
+
+            app.UseSerilogRequestLogging();
 
             app.UseRouting();
 

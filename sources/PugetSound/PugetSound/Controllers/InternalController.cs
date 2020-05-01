@@ -90,8 +90,6 @@ namespace PugetSound.Controllers
 
             _logger.Log(LogLevel.Information, "Welcoming {FriendlyName} as {Username}", friendlyName, username);
 
-            _logger.Log(LogLevel.Information, "{Page} loaded for {Username}", "Index", username);
-
             if (alreadyInRoom) _logger.Log(LogLevel.Information, "Pre-filled {Room} for {Username}", prevRoom.RoomId, username);
 
             // return login page
@@ -112,10 +110,6 @@ namespace PugetSound.Controllers
         [HttpGet]
         public IActionResult Room()
         {
-            var username = HttpContext.User.Claims.GetSpotifyUsername();
-
-            _logger.Log(LogLevel.Information, "{Page} loaded for {Username} with redirect from GET-Room", "Index", username);
-
             return RedirectToAction(nameof(Index));
         }
 
@@ -134,8 +128,6 @@ namespace PugetSound.Controllers
         [HttpPost]
         public async Task<IActionResult> Room(IndexModel room)
         {
-            var api = await _spotifyAccessService.TryGetMemberApi(HttpContext.User.Claims.GetSpotifyUsername());
-
             var username = HttpContext.User.Claims.GetSpotifyUsername();
 
             // prev room?
