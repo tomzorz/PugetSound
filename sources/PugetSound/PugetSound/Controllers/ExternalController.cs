@@ -20,14 +20,12 @@ namespace PugetSound.Controllers
 
         public IActionResult Index()
         {
-            _logger.Log(LogLevel.Information, "Loaded welcome page.");
             return View("Index");
         }
 
         [Route("howitworks")]
         public IActionResult HowItWorks()
         {
-            _logger.Log(LogLevel.Information, "Loaded how it works page.");
             return View("HowItWorks");
         }
     }
