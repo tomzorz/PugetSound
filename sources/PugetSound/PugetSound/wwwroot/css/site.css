@@ -225,6 +225,7 @@ h3 a[data-toggle="collapse"].collapsed::after {
     justify-content: center;
     align-items: center;
     text-align: center;
+    margin-top: -42px;
 }
 
 .external-welcome-wrapper .headerlogo {
@@ -313,6 +314,13 @@ a.whitelink:hover {
     box-shadow: 3px 3px 5px 0px rgba(0, 0, 0, 0.75);
 }
 
+.not-exactly-fixed-top {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+}
+
 @keyframes flashing-yellow-border {
     0% {
         border: 2px solid yellow;
@@ -341,6 +349,7 @@ a.whitelink:hover {
 @media screen and (max-width: 600px) {
     .external-welcome-wrapper {
         display: block;
+        margin-top: 0;
     }
 
     .external-welcome-wrapper .headerlogo, .external-welcome-wrapper .links {
