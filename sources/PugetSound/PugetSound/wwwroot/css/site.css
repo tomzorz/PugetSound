@@ -267,7 +267,7 @@ h3 a[data-toggle="collapse"].collapsed::after {
 }
 
 .external-welcome-wrapper .links a {
-    margin: 10px 20px;
+    margin: 0 2rem;
 }
 
 .form-room-join {
@@ -285,12 +285,32 @@ h3 a[data-toggle="collapse"].collapsed::after {
 }
 
 .form-room-join input[type="submit"] {
-    font-size: 1.5rem;
-    padding: 0.5rem 1.5rem;
+    text-transform: uppercase;
+    padding: 1rem 2rem;
+    font-weight: bold;
 }
 
-.page-howitworks a {
+a.whitelink {
     color: white;
+    text-decoration: underline;
+}
+
+a.whitelink:hover {
+    color: #e1e1e1;
+}
+
+.beta-badge {
+    top: 0.5rem;
+    right: 0.5rem;
+    position: fixed;
+    display: block;
+    margin: 1rem;
+    padding: 0.25rem 0.5rem;
+    font-weight: bold;
+    font-size: 0.8rem;
+    background: #e1e100;
+    color: black;
+    box-shadow: 3px 3px 5px 0px rgba(0, 0, 0, 0.75);
 }
 
 @keyframes flashing-yellow-border {
@@ -326,6 +346,11 @@ h3 a[data-toggle="collapse"].collapsed::after {
     .external-welcome-wrapper .headerlogo, .external-welcome-wrapper .links {
         display: block;
         text-align: center;
+    }
+
+    .external-welcome-wrapper .links a {
+        display: block;
+        margin: 1rem 0;
     }
 
     .external-welcome-wrapper .headerlogo h1 {

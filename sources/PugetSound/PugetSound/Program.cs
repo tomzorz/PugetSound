@@ -26,10 +26,8 @@ namespace PugetSound
      *
      * IMPROVEMENTS
      * - add retry play for 5xx error
-     * - add BETA badge to top right corner
      *
      * BUGS
-     * - new footer broken on mobile?
      */
 
     public class Program
