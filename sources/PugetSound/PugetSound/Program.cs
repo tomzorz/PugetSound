@@ -26,8 +26,10 @@ namespace PugetSound
      *
      * IMPROVEMENTS
      * - add retry play for 5xx error
+     * - add spotify API call timings to log
      *
      * BUGS
+     * - fix footer with smaller screens
      */
 
     public class Program
