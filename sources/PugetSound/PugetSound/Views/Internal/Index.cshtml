@@ -31,10 +31,10 @@
                 <p class="mb-0">You received a deeplink for room <strong>@Model.RoomName</strong>, so that has been pre-filled below. Just press [Enter room] to join.</p>
             </div>
             }
-            <p><em>Letters and hyphens allowed. On room creation spaces will be converted to hyphens, other disallowed will be removed. 3 characters minimum.</em></p>
+            <p><em>Letters and hyphens allowed. On room creation spaces will be converted to hyphens, other disallowed will be removed. 3 characters minimum. If you don't enter anything we'll put you in the naughty room.</em></p>
             <form method="post" asp-contoller="Index" asp-action="Room" class="form-room-join">
                 <input type="hidden" asp-for="PlaylistId" value="@Model.PlaylistId" />
-                <input asp-for="RoomName" pattern="[-a-zA-Z]{3,}" value="@Model.RoomName" class="mr-3" />
+                <input asp-for="RoomName" pattern="[-a-zA-Z ]{3,}" value="@Model.RoomName" class="mr-3" />
                 <input type="submit" value="Enter room" />
             </form>
             <p class="mt-3">Don't forget to keep <em>a</em> Spotify player open <em>somewhere</em>. This can be the desktop client, your phone or the web app. Doesn't matter, but the music needs to come from somewhere.</p>

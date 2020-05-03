@@ -29,7 +29,6 @@ namespace PugetSound
      * - add spotify API call timings to log
      *
      * BUGS
-     * - fix footer with smaller screens
      */
 
     public class Program

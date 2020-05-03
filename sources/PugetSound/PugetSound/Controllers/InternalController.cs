@@ -125,8 +125,10 @@ namespace PugetSound.Controllers
             });
         }
 
+        private const string NaughtyRoomName = "for-naughty-people";
+
         [HttpPost]
-        public async Task<IActionResult> Room(IndexModel room)
+        public IActionResult Room(IndexModel room)
         {
             var username = HttpContext.User.Claims.GetSpotifyUsername();
 
@@ -140,11 +142,12 @@ namespace PugetSound.Controllers
 
             // sanitize room name
             var rgx = new Regex("[^a-zA-Z-]");
+            if (string.IsNullOrWhiteSpace(room.RoomName)) room.RoomName = NaughtyRoomName;
             var sanitizedRoomName = rgx.Replace(room.RoomName.Replace(" ", "-"), string.Empty);
             if (string.IsNullOrWhiteSpace(sanitizedRoomName) || sanitizedRoomName.Length < 3)
             {
                 // hehe
-                sanitizedRoomName = "naughty-room-name";
+                sanitizedRoomName = NaughtyRoomName;
             }
             room.RoomName = sanitizedRoomName;
 

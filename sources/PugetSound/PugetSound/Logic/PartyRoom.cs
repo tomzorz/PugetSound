@@ -179,6 +179,7 @@ namespace PugetSound
 
                 // remove user as DJ if song is null
                 nextPlayer.IsDj = false;
+                OnRoomMembersChanged?.Invoke(this, null);
 
                 // then try again
             }
