@@ -9,8 +9,25 @@
             <p class="mb-3"><a href="/" class="whitelink">🏠 Back home</a></p>
             <h1>How It Works</h1>
             <p><strong>PugetSound</strong> allows you and your group to enjoy music together using Spotify.</p>
-            <p>PugetSound creates a playlist called "PugetSound Queue" in your Spotify account. When you join a room and become a DJ, you'll take turns to play a song for the room members. When it's your turn, the first song from your queue playlist will be played for everyone, and it'll be also removed from said playlist. (Therefore it's not recommended to use it for other purposes.)</p>
-            <p>Unlike other solutions, PugetSound handles the synchronization and queueing on the backend, so it's not necessary to keep the tab open - as long as you have a Spotify player open on a device. This also means that you need to re-enter the room and explicitly press the [Leave room] button to retake control of your Spotify account.</p>
+            <h2>Getting started</h2>
+            <h3>Prerequisites</h3>
+            <p>You need a Spotify Premium account, and a Spotify client open somewhere where the music can come from.</p>
+            <h3>Join or create a room</h3>
+            <p>Rooms can hold an arbitrary amount of people who want to enjoy music together. Whenever you create or join one you'll automatically become a listener in it, which means whenever a song is queued it'll be started for you too. You can pause/resume or play something else on your end, but until you press the [Leave room] button the system will keep playing songs for you whenever a new one is queued in the room.</p>
+            <p>Rooms also allow you to see their history, show who joined or left and what songs were played - you can find the link for the room history in the first column. Remember that empty rooms are automatically deleted after 24 hours - this includes the room history too.</p>
+            <h3>Becoming a DJ</h3>
+            <p>PugetSound creates a playlist called "PugetSound Queue" in your Spotify account. When you join a room and press the [Become a DJ] button, you'll take turns to play a song for the room members. When it's your turn, the first song from your queue playlist will be played for everyone, and it'll be also removed from said playlist. (Therefore it's not recommended to use it for other purposes.) If you run out of songs in your queue playlist you'll automatically be changed to be a listener only.</p>
+            <h3>Closing the page vs. Leaving the room</h3>
+            <p>Unlike other solutions, PugetSound handles the synchronization and queueing on the backend, so it's not necessary to keep the tab/page open - as long as you have a Spotify player open on a device. This also means that if you did close the page you'll need to re-enter the room and explicitly press the [Leave room] button to retake control of your Spotify account.</p>
+            <h3>Skipping songs</h3>
+            <p>When someone doesn't like a song currently playing, they can press the [Vote skip song] button. If enough people vote to skip - currently half of the room rounded down -, a new song will be queued by the next DJ.</p>
+            <h2>Known Issues</h2>
+            <p>The Spotify API is "flaky" for lack of a better word. This can usually cause 2 problems:</p>
+            <ol>
+                <li>We don't get a "refresh token" which lets us re-authorize access to your Spotify after the first 1 hour expires.</li>
+                <li>We get a server-side error from Spotify whenever we try to play a song for you.</li>
+            </ol>
+            <p>Thankfully both of these issues can be fixed by the same easy solution: press the [Leave room] button, then join your room again.</p>
         </div>
     </div>
 </div>

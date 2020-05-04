@@ -101,7 +101,7 @@ namespace PugetSound.Logic
             foreach (var partyRoom in _rooms)
             {
                 // everyone left for 1h+, remove room
-                if (partyRoom.Value.TimeSinceEmpty + TimeSpan.FromMinutes(60) < DateTimeOffset.Now)
+                if (partyRoom.Value.TimeSinceEmpty + TimeSpan.FromHours(24) < DateTimeOffset.Now)
                 {
                     partyRoom.Value.OnRoomMembersChanged -= Room_OnRoomMembersChanged;
                     roomsForCleanup.Add(partyRoom.Value.RoomId);
