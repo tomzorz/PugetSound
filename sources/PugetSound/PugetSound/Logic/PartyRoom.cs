@@ -54,6 +54,8 @@ namespace PugetSound
 
         public event EventHandler<string> OnRoomMembersChanged;
 
+        public event EventHandler<RoomNotification> OnRoomNotification;
+
         public void MemberJoin(RoomMember member)
         {
             if (_members.Any(x => x.UserName == member.UserName)) return;
@@ -62,6 +64,11 @@ namespace PugetSound
             OnRoomMembersChanged?.Invoke(this, member.UserName);
 
             _roomEvents.Add(new UserEvent(member.UserName, member.FriendlyName, UserEventType.JoinedRoom));
+            OnRoomNotification?.Invoke(this, new RoomNotification
+            {
+                Category = RoomNotificationCategory.Information,
+                Message = $"{member.FriendlyName} joined room"
+            });
 
             ToggleDj(member, false);
 
@@ -83,17 +90,38 @@ namespace PugetSound
             member.DjOrderNumber = isDj ? _members.Where(x => x.IsDj).Max(y => y.DjOrderNumber) + 1 : -1;
 
             _roomEvents.Add(new UserEvent(member.UserName, member.FriendlyName, isDj ? UserEventType.BecameDj : UserEventType.BecameListener));
+            OnRoomNotification?.Invoke(this, new RoomNotification
+            {
+                Category = RoomNotificationCategory.Information,
+                Message = $"{member.FriendlyName} became a {(isDj ? "DJ" : "listener")}"
+            });
 
             OnRoomMembersChanged?.Invoke(this, null);
         }
 
         public void VoteSkipSong(RoomMember member)
         {
+            var oldVal = member.VotedSkipSong;
+
             member.VotedSkipSong = true;
+
+            if (oldVal == false)
+            {
+                OnRoomNotification?.Invoke(this, new RoomNotification
+                {
+                    Category = RoomNotificationCategory.Information,
+                    Message = $"{member.FriendlyName} voted to skip song"
+                });
+            }
 
             if (_members.Count / 2 > _members.Count(x => x.VotedSkipSong)) return;
 
             _roomEvents.Add(new SongSkippedEvent());
+            OnRoomNotification?.Invoke(this, new RoomNotification
+            {
+                Category = RoomNotificationCategory.Success,
+                Message = $"Skipping song with {_members.Count(x => x.VotedSkipSong)} votes"
+            });
 
             _handledUntil = DateTimeOffset.Now;
             foreach (var roomMember in _members)
@@ -108,6 +136,11 @@ namespace PugetSound
             if (!didRemove) return;
 
             _roomEvents.Add(new UserEvent(member.UserName, member.FriendlyName, UserEventType.LeftRoom));
+            OnRoomNotification?.Invoke(this, new RoomNotification
+            {
+                Category = RoomNotificationCategory.Information,
+                Message = $"{member.FriendlyName} left the room"
+            });
 
             OnRoomMembersChanged?.Invoke(this, member.UserName);
 
@@ -148,11 +181,22 @@ namespace PugetSound
                 {
                     _currentDjNumber = nextPlayer.DjOrderNumber;
 
-                    // start songs for everyone
-                    foreach (var roomMember in _members)
-                    {
-                        await PlaySong(roomMember, song);
-                    }
+                    // do the loop on a tmp list of members, so if someone joins mid-play we don't err out
+                    var tmpMembers = _members.ToList();
+
+                    // start songs for everyone (OLD)
+                    //foreach (var roomMember in tmpMembers)
+                    //{
+                    //    await PlaySong(roomMember, song);
+                    //}
+
+                    // start songs for everyone (NEW)
+                    var sw = new Stopwatch();
+                    sw.Start();
+                    var playTasks = tmpMembers.Select(x => PlaySong(x, song)).ToList();
+                    await Task.WhenAll(playTasks);
+                    sw.Stop();
+                    _logger.Log(LogLevel.Information, "Took {TimedApiPlayForAll} to start songs for {MemberCount} room members", sw.Elapsed, tmpMembers.Count);
 
                     // set handled
                     _handledUntil = DateTimeOffset.Now.AddMilliseconds(song.DurationMs);
@@ -209,6 +253,12 @@ namespace PugetSound
             catch (Exception e)
             {
                 _logger.Log(LogLevel.Warning, "Failed to play song for {Username} because {@Exception}", member.UserName, e);
+                OnRoomNotification?.Invoke(this, new RoomNotification
+                {
+                    Category = RoomNotificationCategory.Error,
+                    Message = $"Failed to play song",
+                    TargetId = member.ConnectionId
+                });
                 // oh well
                 Debug.WriteLine(e);
             }
@@ -238,6 +288,11 @@ namespace PugetSound
             catch (Exception e)
             {
                 _logger.Log(LogLevel.Warning, "Failed to get song from {Username}'s queue because {@Exception}", member.UserName, e);
+                OnRoomNotification?.Invoke(this, new RoomNotification
+                {
+                    Category = RoomNotificationCategory.Warning,
+                    Message = $"Failed to get song from {member.FriendlyName}'s queue"
+                });
                 Debug.WriteLine(e);
                 return null;
             }
@@ -249,6 +304,38 @@ namespace PugetSound
             var orderedDjs = _members.Where(x => x.IsDj).OrderBy(y => y.DjOrderNumber).ToList();
             var nextDj = orderedDjs.FirstOrDefault(x => x.DjOrderNumber > _currentDjNumber);
             return nextDj ?? orderedDjs.First();
+        }
+
+        public async Task AddToLiked(RoomMember member)
+        {
+            try
+            {
+                var api = await _spotifyAccessService.TryGetMemberApi(member.UserName);
+
+                var track = _currentTrack;
+
+                var result = await api.SaveTrackAsync(track.Id);
+
+                result.ThrowOnError(nameof(api.SaveTrackAsync));
+
+                OnRoomNotification?.Invoke(this, new RoomNotification
+                {
+                    Category = RoomNotificationCategory.Success,
+                    Message = $"Successfully added {string.Join(", ", track.Artists.Select(x => x.Name).ToArray())} - {track.Name} to your Liked Songs",
+                    TargetId = member.ConnectionId
+                });
+            }
+            catch (Exception e)
+            {
+                _logger.Log(LogLevel.Warning, "Failed to add song to {Username}'s liked songs because {@Exception}", member.UserName, e);
+                OnRoomNotification?.Invoke(this, new RoomNotification
+                {
+                    Category = RoomNotificationCategory.Error,
+                    Message = $"Failed to add song to your Liked Songs",
+                    TargetId = member.ConnectionId
+                });
+                Debug.WriteLine(e);
+            }
         }
     }
 }

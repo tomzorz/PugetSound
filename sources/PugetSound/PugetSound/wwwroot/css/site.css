@@ -83,6 +83,27 @@ input[type=button], input[type=submit], input[type=reset] {
     color: white;
     padding: 2px 8px;
     border-radius: 500px;
+    transform: translate3d(0,0,0);
+    transition-property: box-shadow, transform;
+    transition-duration: .4s;
+    transition-timing-function: cubic-bezier(.16,1,.29,.99);
+    box-shadow: 0 2px 8px rgba(0,0,0,.05);
+}
+
+input[type=button].redButton, input[type=submit].redButton, input[type=reset].redButton {
+    background-color: #d71e60;
+}
+
+input[type=button]:hover, input[type=submit]:hover, input[type=reset]:hover {
+    background-color: #2ee770;
+    transform: translate3d(0,-2px,0);
+    box-shadow: 0 4px 10px 2px rgba(0,0,0,.2);
+    transition-duration: .6s;
+    transition-timing-function: cubic-bezier(.16,1,.29,.99)
+}
+
+input[type=button].redButton:hover, input[type=submit].redButton:hover, input[type=reset].redButton:hover {
+    background-color: #e72e70;
 }
 
 .page-room input[type=button], .page-room input[type=submit], .page-room input[type=reset] {
@@ -92,6 +113,10 @@ input[type=button], input[type=submit], input[type=reset] {
 input[type=button]:disabled, input[type=submit]:disabled, input[type=reset]:disabled {
     background-color: #7e9770;
     color: #e1e1e1;
+}
+
+.controls-area input[type=button], .controls-area input[type=submit], .controls-area input[type=reset] {
+    margin: 0 5px 10px 0;
 }
 
 input[type=text] {
@@ -127,6 +152,7 @@ main, .footer {
 
 #currentProgress {
     -webkit-appearance: none;
+    -moz-appearance: none;
     appearance: none;
     display: block;
     width: 250px;
@@ -348,6 +374,46 @@ a.whitelink:hover {
     line-height: 1rem;
 }
 
+#notification-area {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+}
+
+#notification-area:first-child {
+    margin-top: 6rem;
+}
+
+.puget-notification {
+    max-width: 90vw;
+    margin: 0 auto;
+    margin-top: 3rem;
+    backdrop-filter: blur(30px);
+    color: white;
+    font-size: 1.2rem;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 6.4px 14.4px 0 rgba(0,0,0,.132), 0 1.2px 3.6px 0 rgba(0,0,0,.108);
+    transition: all 0.5s;
+}
+
+.puget-notification-information {
+    background: rgba(50, 50, 255, 0.5);
+}
+
+.puget-notification-success {
+    background: rgba(50, 255, 50, 0.5);
+}
+
+.puget-notification-warning {
+    background: rgba(255, 255, 50, 0.5);
+}
+
+.puget-notification-error {
+    background: rgba(255, 50, 50, 0.5);
+}
+
 @keyframes flashing-yellow-border {
     0% {
         border: 2px solid yellow;
@@ -415,5 +481,9 @@ a.whitelink:hover {
         text-transform: uppercase;
         padding: 0.25rem 1rem;
         font-weight: bold;
+    }
+
+    .puget-notification {
+        width: 90vw;
     }
 }

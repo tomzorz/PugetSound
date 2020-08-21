@@ -124,6 +124,7 @@ namespace PugetSound
                                | Scope.PlaylistModifyPublic
                                | Scope.PlaylistReadCollaborative
                                | Scope.UserLibraryRead
+                               | Scope.UserLibraryModify
                                | Scope.UserReadPrivate
                                | Scope.UserReadCurrentlyPlaying;
                   options.Scope.Add(scopes.GetStringAttribute(","));

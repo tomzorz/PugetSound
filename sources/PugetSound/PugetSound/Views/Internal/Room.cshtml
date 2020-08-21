@@ -18,11 +18,8 @@
         <div class="col-12">
             <div class="blue-border p-3" id="leaveBox">
                 <div class="row align-items-center">
-                    <div class="col-sm-auto">
-                        <input type="button" id="leaveRoomButton" value="Leave room" />
-                    </div>
-                    <div class="col-sm-10">
-                        <p class="mb-0"><strong>If you close this page playback will continue on the backend.</strong><br /> To stop, press the [Leave room] button. You can rejoin this page to press it later.</p>
+                    <div class="col-sm-12">
+                        <p class="mb-0"><strong>If you close this page playback will continue on the backend.</strong> To stop, press the [Leave Room] button. You can rejoin this page to press it later.</p>
                     </div>
                 </div>
             </div>
@@ -49,14 +46,16 @@
     </div>
     <hr />
     <div class="row">
-        <div class="col-sm-4">
+        <div class="col-sm-4 controls-area">
             <h3>Controls</h3>
+            <input type="button" class="redButton" id="leaveRoomButton" value="Leave Room" />
             <input type="button" id="voteSkipSongButton" value="Vote Skip Song" />
+            <input type="button" id="addToLikedButton" value="Add To Liked Songs" />
             <p class="mt-3 mb-3"><a href="/internal/roomhistory/@Model.RoomName" target="_blank">View Room History (opens in new tab)</a></p>
             <div class="invite-link-area">
                 <span>💌 Invite link (click below to copy to clipboard)</span>
                 <a href="/internal/?join=@Model.RoomName" id="invlink-hidden"></a>
-                <input type="text" id="invlink-copy" value=""/>
+                <input type="text" id="invlink-copy" value="" />
             </div>
         </div>
         <div class="col-sm-4">
@@ -73,6 +72,9 @@
             <input type="button" id="joinListenerButton" value="Become a listener" />
         </div>
     </div>
+</div>
+
+<div id="notification-area">
 </div>
 
 <script src="~/js/signalr/dist/browser/signalr.js"></script>
@@ -99,6 +101,7 @@
     document.getElementById("joinDjButton").disabled = true;
     document.getElementById("joinListenerButton").disabled = true;
     document.getElementById("voteSkipSongButton").disabled = true;
+    document.getElementById("addToLikedButton").disabled = true;
 
     // create connection
     var connection = new signalR.HubConnectionBuilder()
@@ -207,6 +210,22 @@
         timeDifference = difference;
     });
 
+    connection.on("ShowNotification", function (category, message) {
+        // create
+        var div = document.createElement("div");
+        div.innerHTML = message;
+        div.classList.add("puget-notification");
+        div.classList.add(`puget-notification-${category}`);
+
+        // make it appear
+        document.getElementById("notification-area").appendChild(div);
+
+        // make it disappear
+        setTimeout(function() {
+            document.getElementById("notification-area").removeChild(div);
+        }, 8000);
+    });
+
     // inv link
 
     let inviteLink = document.getElementById("invlink-hidden").href;
@@ -228,6 +247,7 @@
         document.getElementById("joinDjButton").disabled = false;
         document.getElementById("joinListenerButton").disabled = false;
         document.getElementById("voteSkipSongButton").disabled = false;
+        document.getElementById("addToLikedButton").disabled = false;
 
         // say hello
         connection.invoke("hello", (new Date()).getTime()).catch(function (err) {
@@ -293,6 +313,20 @@
 
         // gtag
         gtag('event', 'vote_skip',
+            {
+                'event_category': '@Model.RoomName'
+            });
+
+        event.preventDefault();
+    });
+
+    document.getElementById("addToLikedButton").addEventListener("click", function (event) {
+        connection.invoke("addToLiked").catch(function (err) {
+            return console.error(err.toString());
+        });
+
+        // gtag
+        gtag('event', 'add_to_liked',
             {
                 'event_category': '@Model.RoomName'
             });

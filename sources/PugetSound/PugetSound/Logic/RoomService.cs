@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
@@ -42,14 +43,31 @@ namespace PugetSound.Logic
         {
             if (_rooms.ContainsKey(roomId)) return _rooms[roomId];
 
-            var roomLogger = _loggerFactory.CreateLogger(typeof(PartyRoom));
+            var roomLogger = _loggerFactory.CreateLogger<PartyRoom>();
             var room = new PartyRoom(roomId, roomLogger, _spotifyAccessService);
             room.OnRoomMembersChanged += Room_OnRoomMembersChanged;
+            room.OnRoomNotification += Room_OnRoomNotification;
             _rooms[roomId] = room;
 
             _logger.Log(LogLevel.Information, "Created {Room}", roomId);
 
             return _rooms[roomId];
+        }
+
+        private async void Room_OnRoomNotification(object sender, RoomNotification e)
+        {
+            // get room
+            var room = (PartyRoom)sender;
+
+            // update web clients
+            if (string.IsNullOrWhiteSpace(e.TargetId))
+            {
+                await _roomHubContext.Clients.Group(room.RoomId).ShowNotification(e.Category.ToString().ToLowerInvariant(), e.Message);
+            }
+            else
+            {
+                await _roomHubContext.Clients.Client(e.TargetId).ShowNotification(e.Category.ToString().ToLowerInvariant(), e.Message);
+            }
         }
 
         private async void Room_OnRoomMembersChanged(object sender, string e)
@@ -81,7 +99,7 @@ namespace PugetSound.Logic
 
             // update web clients
             var listeners = room.Members.Where(x => !x.IsDj).ToList();
-            var djs = room.Members.Where(x => x.IsDj).ToList();
+            var djs = room.Members.Where(x => x.IsDj).OrderBy(y => y.DjOrderNumber).ToList();
 
             await _roomHubContext.Clients.Group(room.RoomId).ListenersChanged(listeners);
             await _roomHubContext.Clients.Group(room.RoomId).DjsChanged(djs);
@@ -104,6 +122,7 @@ namespace PugetSound.Logic
                 if (partyRoom.Value.TimeSinceEmpty + TimeSpan.FromHours(24) < DateTimeOffset.Now)
                 {
                     partyRoom.Value.OnRoomMembersChanged -= Room_OnRoomMembersChanged;
+                    partyRoom.Value.OnRoomNotification -= Room_OnRoomNotification;
                     roomsForCleanup.Add(partyRoom.Value.RoomId);
                     continue;
                 }

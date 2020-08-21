@@ -1,17 +1,12 @@
 using System;
-using System.Collections.Generic;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using PugetSound.Auth;
 using PugetSound.Logic;
 using Serilog;
 using Serilog.Events;
 using Serilog.Exceptions;
-using Serilog.Exceptions.Core;
-using Serilog.Exceptions.Destructurers;
 
 namespace PugetSound
 {
@@ -23,12 +18,19 @@ namespace PugetSound
      * - clean up code (ongoing effort)
      * - add whitelist?
      * - create playlist from room history
+     * - add chat
+     * - add reactions
      *
      * IMPROVEMENTS
-     * - add retry play for 5xx error
-     * - add spotify API call timings to log
+     * - add retry play for 5xx error (room failQueue, FailEvent counts down, room worker calls fail events)
+     * - add room history who voted to skip song
+     * - add progress bar / votes required to vote skip song button
+     * - fetch upcoming 1-3 songs for every user on queue listing, show them as upcoming
      *
      * BUGS
+     * - leave room doesn't always leaves room? only do it on actual disconnect success
+     * - after leave room joining a new one doesn't work?
+     *
      */
 
     public class Program

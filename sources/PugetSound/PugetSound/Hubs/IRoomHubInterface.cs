@@ -15,5 +15,9 @@ namespace PugetSound.Hubs
         Task SongChanged(RoomState state);
 
         Task ApplyClientTimeDifference(long difference);
+
+        Task ShowNotification(string category, string message);
+
+        Task Chat(string fromUser, string message);
     }
 }

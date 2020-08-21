@@ -44,10 +44,12 @@ namespace PugetSound.Hubs
 
             if (!hasRoom) return;
 
+            room.Members.First(x => x.UserName == username).ConnectionId = Context.ConnectionId;
+
             _logger.Log(LogLevel.Information, "{User} saying hello", username);
 
             var listeners = room.Members.Where(x => !x.IsDj).ToList();
-            var djs = room.Members.Where(x => x.IsDj).ToList();
+            var djs = room.Members.Where(x => x.IsDj).OrderBy(y => y.DjOrderNumber).ToList();
 
             await Clients.Caller.ListenersChanged(listeners);
             await Clients.Caller.DjsChanged(djs);
@@ -113,6 +115,19 @@ namespace PugetSound.Hubs
             room.VoteSkipSong(room.Members.First(x => x.UserName == username));
 
             return Task.CompletedTask;
+        }
+
+        public async Task AddToLiked()
+        {
+            var username = Context.User.Claims.GetSpotifyUsername();
+
+            var hasRoom = _roomService.TryGetRoomForUsername(username, out var room);
+
+            if (!hasRoom) return;
+
+            _logger.Log(LogLevel.Information, "{Username} in {Room} added the current song to their liked songs", username, room.RoomId);
+
+            await room.AddToLiked(room.Members.First(x => x.UserName == username));
         }
     }
 }

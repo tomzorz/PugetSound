@@ -1,5 +1,4 @@
-﻿using System.Text.Json.Serialization;
-using SpotifyAPI.Web;
+﻿using Newtonsoft.Json;
 
 namespace PugetSound.Logic
 {
@@ -16,6 +15,9 @@ namespace PugetSound.Logic
         public bool VotedSkipSong { get; set; }
 
         public int DjOrderNumber { get; set; }
+
+        [JsonIgnore]
+        public string ConnectionId { get; set; }
 
         public RoomMember(string username, string friendlyName, string playlistId)
         {
