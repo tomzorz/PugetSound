@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using PugetSound.Auth;
+using PugetSound.Helpers;
 using PugetSound.Hubs;
 
 namespace PugetSound.Logic
@@ -98,9 +99,7 @@ namespace PugetSound.Logic
             }
 
             // update web clients
-            var listeners = room.Members.Where(x => !x.IsDj).ToList();
-            var djs = room.Members.Where(x => x.IsDj).OrderBy(y => y.DjOrderNumber).ToList();
-
+            var (listeners, djs) = room.Members.SplitMembers();
             await _roomHubContext.Clients.Group(room.RoomId).ListenersChanged(listeners);
             await _roomHubContext.Clients.Group(room.RoomId).DjsChanged(djs);
         }

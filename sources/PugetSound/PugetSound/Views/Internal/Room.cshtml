@@ -14,17 +14,6 @@
             <div class="alert alert-warning" id="connectionBox">📡 <span id="connectionStatus"></span></div>
         </div>
     </div>
-    <div class="row">
-        <div class="col-12">
-            <div class="blue-border p-3" id="leaveBox">
-                <div class="row align-items-center">
-                    <div class="col-sm-12">
-                        <p class="mb-0"><strong>If you close this page playback will continue on the backend.</strong> To stop, press the [Leave Room] button. You can rejoin this page to press it later.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
     <hr />
     <div class="row align-items-center">
         <div class="col-sm-auto">
@@ -211,20 +200,33 @@
     });
 
     connection.on("ShowNotification", function (category, message) {
+        showNotification(category, message);
+    });
+
+    function showNotification(category, message) {
         // create
         var div = document.createElement("div");
         div.innerHTML = message;
         div.classList.add("puget-notification");
+        div.classList.add("puget-notification-hidden");
         div.classList.add(`puget-notification-${category}`);
 
         // make it appear
         document.getElementById("notification-area").appendChild(div);
+        requestAnimationFrame(function () {
+            setTimeout(function () {
+                div.classList.remove("puget-notification-hidden");
+            });
+        });
 
         // make it disappear
-        setTimeout(function() {
-            document.getElementById("notification-area").removeChild(div);
+        setTimeout(function () {
+            div.classList.add("puget-notification-hidden");
+            div.addEventListener("transitionend", function () {
+                document.getElementById("notification-area").removeChild(div);
+            });
         }, 8000);
-    });
+    }
 
     // inv link
 
@@ -257,8 +259,8 @@
         // add debug info
         document.getElementById("footer-debug-custom").innerHTML = connection.connectionId;
 
-        // flash leave notice
-        document.getElementById("leaveBox").classList.add("flashing-border");
+        // leave notice
+        showNotification("warning", "If you close this page playback will continue on the backend. To stop, press the [Leave Room] button. You can rejoin this page to press it later.");
 
         // gtag
         gtag('event', 'user_joined',

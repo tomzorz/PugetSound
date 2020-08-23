@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using PugetSound.Auth;
+using PugetSound.Helpers;
 using PugetSound.Logic;
 
 namespace PugetSound.Hubs
@@ -48,8 +49,7 @@ namespace PugetSound.Hubs
 
             _logger.Log(LogLevel.Information, "{User} saying hello", username);
 
-            var listeners = room.Members.Where(x => !x.IsDj).ToList();
-            var djs = room.Members.Where(x => x.IsDj).OrderBy(y => y.DjOrderNumber).ToList();
+            var (listeners, djs) = room.Members.SplitMembers();
 
             await Clients.Caller.ListenersChanged(listeners);
             await Clients.Caller.DjsChanged(djs);
