@@ -419,6 +419,16 @@ a.whitelink:hover {
     background: rgba(255, 50, 50, 0.5);
 }
 
+.puget-album-art {
+    max-width: 100%;
+    max-height: 250px;
+    height: 100%;
+}
+
+.puget-track-progress {
+    max-width: 100%;
+}
+
 @keyframes flashing-yellow-border {
     0% {
         border: 2px solid yellow;
