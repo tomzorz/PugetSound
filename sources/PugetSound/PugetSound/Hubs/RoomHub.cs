@@ -56,6 +56,8 @@ namespace PugetSound.Hubs
 
             await Clients.Caller.ApplyClientTimeDifference(DateTimeOffset.Now.ToUnixTimeMilliseconds() - clientTime);
 
+            await Clients.Caller.UpdateReactionTotals(room.CurrentReactionTotals.ToClientReactionTotals());
+
             if (room.CurrentRoomState.IsPlayingSong) await Clients.Caller.SongChanged(room.CurrentRoomState);
         }
 
@@ -128,6 +130,23 @@ namespace PugetSound.Hubs
             _logger.Log(LogLevel.Information, "{Username} in {Room} added the current song to their liked songs", username, room.RoomId);
 
             await room.AddToLiked(room.Members.First(x => x.UserName == username));
+        }
+
+        public Task ReactionPressed(string reaction)
+        {
+            var username = Context.User.Claims.GetSpotifyUsername();
+
+            var hasRoom = _roomService.TryGetRoomForUsername(username, out var room);
+
+            if (!hasRoom) return Task.CompletedTask;
+
+            var didChangeReactionState = room.UserReaction(room.Members.First(x => x.UserName == username), reaction);
+
+            if (!didChangeReactionState) return Task.CompletedTask;
+
+            _logger.Log(LogLevel.Information, "{Username} in {Room} reacted to the current song with {Reaction}", username, room.RoomId, reaction);
+
+            return Task.CompletedTask;
         }
     }
 }

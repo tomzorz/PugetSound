@@ -18,6 +18,8 @@ namespace PugetSound.Hubs
 
         Task ShowNotification(string category, string message);
 
+        Task UpdateReactionTotals(Dictionary<string, int> reactionTotals);
+
         Task Chat(string fromUser, string message);
     }
 }

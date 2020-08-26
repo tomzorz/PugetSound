@@ -19,6 +19,9 @@ namespace PugetSound.Logic
         [JsonIgnore]
         public string ConnectionId { get; set; }
 
+        [JsonIgnore]
+        public Reaction ReactionFlagsForCurrentTrack { get; set; }
+
         public RoomMember(string username, string friendlyName, string playlistId)
         {
             UserName = username;

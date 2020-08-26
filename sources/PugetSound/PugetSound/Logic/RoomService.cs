@@ -48,11 +48,21 @@ namespace PugetSound.Logic
             var room = new PartyRoom(roomId, roomLogger, _spotifyAccessService);
             room.OnRoomMembersChanged += Room_OnRoomMembersChanged;
             room.OnRoomNotification += Room_OnRoomNotification;
+            room.OnRoomCurrentReactionsChanged += Room_OnRoomCurrentReactionsChanged;
             _rooms[roomId] = room;
 
             _logger.Log(LogLevel.Information, "Created {Room}", roomId);
 
             return _rooms[roomId];
+        }
+
+        private async void Room_OnRoomCurrentReactionsChanged(object sender, RoomCurrentReactions e)
+        {
+            // get room
+            var room = (PartyRoom)sender;
+
+            // update web clients
+            await _roomHubContext.Clients.Group(room.RoomId).UpdateReactionTotals(e.ReactionTotals.ToClientReactionTotals());
         }
 
         private async void Room_OnRoomNotification(object sender, RoomNotification e)
@@ -122,6 +132,7 @@ namespace PugetSound.Logic
                 {
                     partyRoom.Value.OnRoomMembersChanged -= Room_OnRoomMembersChanged;
                     partyRoom.Value.OnRoomNotification -= Room_OnRoomNotification;
+                    partyRoom.Value.OnRoomCurrentReactionsChanged -= Room_OnRoomCurrentReactionsChanged;
                     roomsForCleanup.Add(partyRoom.Value.RoomId);
                     continue;
                 }

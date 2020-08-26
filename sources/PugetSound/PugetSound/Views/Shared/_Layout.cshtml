@@ -25,7 +25,7 @@
     <meta name="theme-color" content="#ffffff">
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" />
+    <link rel="stylesheet" href="~/css/site.css?ver=20200826" />
 </head>
 <body>
     <div class="container mt-4">
@@ -38,7 +38,7 @@
     </div>
     <footer class="footer">
         <div class="container">
-            <span class="footer-debug">PugetSound (revision 2020-08-23-alpha) - @ViewData["Page"] <span id="footer-debug-custom"></span></span>
+            <span class="footer-debug">PugetSound (revision 2020-08-26-alpha) - @ViewData["Page"] <span id="footer-debug-custom"></span></span>
             <span class="footer-info">&copy; 2020 <a href="https://tomzorz.me">Tamás Deme 'tomzorz'</a>. Stay home (if possible), wash your hands and <strong>wear a mask</strong>. Optionally find me <a href="https://twitter.com/tomzorz_">on twitter</a>.</span>
         </div>
     </footer>
@@ -55,5 +55,17 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @RenderSection("Scripts", required: false)
+    <script type="text/javascript">
+        // hide outlines for mouse users
+
+        function handleFirstTab(e) {
+            if (e.keyCode === 9) {
+                document.body.classList.add('user-is-tabbing');
+                window.removeEventListener('keydown', handleFirstTab);
+            }
+        }
+
+        window.addEventListener('keydown', handleFirstTab);
+    </script>
 </body>
 </html>

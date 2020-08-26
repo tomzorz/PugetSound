@@ -20,7 +20,7 @@
             <img width="250" height="250" id="currentSongArt" />
             <progress id="currentProgress" value="0" max="100"></progress>
         </div>
-        <div class="col-sm-auto">
+        <div class="col-sm-auto mr-auto">
             <h5>Now playing:</h5>
             <div class="mt-3 mb-3 pl-3 border-left border-success">
                 <p id="currentSongTitle" class="font-weight-bold">-</p>
@@ -30,6 +30,26 @@
             <h5>Queued by:</h5>
             <div class="mt-3 mb-3 pl-3 border-left border-success">
                 <p id="currentDj">-</p>
+            </div>
+        </div>
+        <div class="col-sm-auto">
+            <div class="puget-reactions">
+                <button type="button" class="puget-reaction-button" data-reaction="rock">
+                    <span class="puget-reaction-button-counter">0</span>
+                    <span class="puget-reaction-button-figure">🤟</span>
+                </button>
+                <button type="button" class="puget-reaction-button" data-reaction="flame">
+                    <span class="puget-reaction-button-counter">0</span>
+                    <span class="puget-reaction-button-figure">🔥</span>
+                </button>
+                <button type="button" class="puget-reaction-button" data-reaction="clap">
+                    <span class="puget-reaction-button-counter">0</span>
+                    <span class="puget-reaction-button-figure">👏</span>
+                </button>
+                <button type="button" class="puget-reaction-button" data-reaction="heart">
+                    <span class="puget-reaction-button-counter">0</span>
+                    <span class="puget-reaction-button-figure">💖</span>
+                </button>
             </div>
         </div>
     </div>
@@ -79,10 +99,10 @@
 
     const userName = "@Model.UserName";
 
-    let d = new Date();
-    var timeNow = d.getTime();
-    var timeEnd = timeNow;
-    var timeDifference = 0;
+    const d = new Date();
+    let timeNow = d.getTime();
+    let timeEnd = timeNow;
+    let timeDifference = 0;
 
     // disable controls until we know what's up
 
@@ -93,7 +113,7 @@
     document.getElementById("addToLikedButton").disabled = true;
 
     // create connection
-    var connection = new signalR.HubConnectionBuilder()
+    let connection = new signalR.HubConnectionBuilder()
         .withUrl("/roomhub")
         .configureLogging(signalR.LogLevel.Debug)
         .withAutomaticReconnect()
@@ -130,12 +150,19 @@
     // incoming events
 
     connection.on("SongChanged", function (roomState) {
+        // song details
         document.getElementById("currentDj").textContent = roomState.currentDjName;
         document.getElementById("currentSongArtist").textContent = roomState.currentSongArtist;
         document.getElementById("currentSongTitle").textContent = roomState.currentSongTitle;
         document.getElementById("currentSongArt").src = roomState.currentSongArtUrl;
         timeNow = roomState.songStartedAtUnixTimestamp;
         timeEnd = roomState.songFinishesAtUnixTimestamp;
+
+        // re-enabled all reaction buttons
+        const reactionButtons = document.getElementsByClassName("puget-reaction-button");
+        [].forEach.call(reactionButtons, function(reactionButton) {
+            reactionButton.disabled = false;
+        });
 
         // gtag
         gtag('event', 'song_played',
@@ -147,12 +174,12 @@
 
     connection.on("ListenersChanged", function (listeners) {
         // clear out list
-        var listenerList = document.getElementById("listenerList");
+        const listenerList = document.getElementById("listenerList");
         listenerList.innerHTML = "";
 
         // add members
         listeners.forEach(listener => {
-            var li = document.createElement("li");
+            const li = document.createElement("li");
             li.innerHTML = listener.friendlyName + ' <a href="spotify:user:' + listener.userName + '" class="badge badge-primary">🔗 Profile</a>';
             listenerList.appendChild(li);
         });
@@ -172,12 +199,12 @@
 
     connection.on("DjsChanged", function (djs) {
         // clear out list
-        var djList = document.getElementById("djList");
+        const djList = document.getElementById("djList");
         djList.innerHTML = "";
 
         // add members
         djs.forEach(dj => {
-            var li = document.createElement("li");
+            const li = document.createElement("li");
             li.innerHTML = dj.friendlyName + '<sup> [' + dj.djOrderNumber +']</sup> <a href="spotify:user:' + dj.userName + '" class="badge badge-primary">🔗 Profile</a>';
             djList.appendChild(li);
         });
@@ -205,7 +232,7 @@
 
     function showNotification(category, message) {
         // create
-        var div = document.createElement("div");
+        const div = document.createElement("div");
         div.innerHTML = message;
         div.classList.add("puget-notification");
         div.classList.add("puget-notification-hidden");
@@ -227,6 +254,14 @@
             });
         }, 8000);
     }
+
+    connection.on("UpdateReactionTotals", function (totals) {
+        const reactionButtons = document.getElementsByClassName("puget-reaction-button");
+        [].forEach.call(reactionButtons, function(reactionButton) {
+            const number = totals[reactionButton.dataset.reaction];
+            reactionButton.getElementsByClassName("puget-reaction-button-counter")[0].innerHTML = number;
+        });
+    });
 
     // inv link
 
@@ -336,6 +371,27 @@
         event.preventDefault();
     });
 
+    const reactionButtons = document.getElementsByClassName("puget-reaction-button");
+    [].forEach.call(reactionButtons, function(reactionButton) {
+        reactionButton.addEventListener("click",
+            function(event) {
+                connection.invoke("reactionPressed", reactionButton.dataset.reaction).then(function() {
+                    reactionButton.disabled = true;
+                }).catch(function (err) {
+                    return console.error(err.toString());
+                });
+
+                // gtag
+                gtag('event',
+                    'user_react_' + reactionButton.dataset.reaction,
+                    {
+                        'event_category': '@Model.RoomName'
+                    });
+
+                event.preventDefault();
+            });
+    });
+
     // window close
 
     window.addEventListener('beforeunload', beforeUnload, true);
@@ -354,13 +410,13 @@
     // progress
 
     function humanize(millis) {
-        var minutes = Math.floor(millis / 60000);
-        var seconds = ((millis % 60000) / 1000).toFixed(0);
+        const minutes = Math.floor(millis / 60000);
+        const seconds = ((millis % 60000) / 1000).toFixed(0);
         return minutes + ":" + (seconds < 10 ? '0' : '') + seconds;
     }
 
     setInterval(function(){
-        let current = (new Date()).getTime() + timeDifference;
+        const current = (new Date()).getTime() + timeDifference;
         if(timeNow <= current && timeEnd > current) {
             document.getElementById("currentTime").innerHTML = humanize(current-timeNow) + " (-" + humanize(timeEnd-current) + ")";
             document.getElementById("currentProgress").max = timeEnd-timeNow;
@@ -372,4 +428,5 @@
             document.getElementById("currentTime").innerHTML = "Changing songs...";
         }
     }, 1000);
+
 </script>

@@ -77,6 +77,13 @@ body {
 
 /* --------------------- custom stuff --------------------- */
 
+body:not(.user-is-tabbing) input[type=button]:focus,
+body:not(.user-is-tabbing) input[type=submit]:focus,
+body:not(.user-is-tabbing) input[type=reset]:focus,
+body:not(.user-is-tabbing) button:focus {
+    outline: none;
+}
+
 input[type=button], input[type=submit], input[type=reset] {
     background-color: #1ed760;
     border: none;
@@ -417,6 +424,45 @@ a.whitelink:hover {
 
 .puget-notification-error {
     background: rgba(255, 50, 50, 0.5);
+}
+
+.puget-reactions .puget-reaction-button:first-child {
+    border-radius: 10px 10px 0 0;
+}
+
+.puget-reactions .puget-reaction-button:last-child {
+    border-radius: 0 0 10px 10px;
+}
+
+.puget-reaction-button {
+    background: rgba(192, 116, 178, 0.4);
+    display: block;
+    margin: 0;
+    padding: 0.25em 0.5em;
+    text-align: center;
+    width: 100px;
+    border: none;
+    box-shadow: 0 6.4px 14.4px 0 rgba(0,0,0,.132), 0 1.2px 3.6px 0 rgba(0,0,0,.108);
+    transition: all 0.5s ease;
+}
+
+.puget-reaction-button[disabled], .puget-reaction-button[disabled]:hover {
+    background: rgba(138, 181, 232, 0.4);
+    color: white;
+}
+
+.puget-reaction-button:hover {
+    background: rgba(202, 126, 188, 0.6);
+}
+
+.puget-reaction-button-figure {
+    font-size: 1.6em;
+    width: 2em;
+}
+
+.puget-reaction-button-counter {
+    font-size: 1.6em;
+    color: white;
 }
 
 @keyframes flashing-yellow-border {

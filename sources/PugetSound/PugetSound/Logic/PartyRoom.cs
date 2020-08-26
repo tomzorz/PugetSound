@@ -37,6 +37,8 @@ namespace PugetSound
 
         public IReadOnlyCollection<IRoomEvent> RoomEvents => _roomEvents;
 
+        public Dictionary<Reaction, int> CurrentReactionTotals { get; private set; }
+
         public PartyRoom(string roomId, ILogger logger, SpotifyAccessService spotifyAccessService)
         {
             _logger = logger;
@@ -50,11 +52,15 @@ namespace PugetSound
             _currentDjNumber = -1;
             _currentTrack = null;
             CurrentRoomState = new RoomState();
+
+            UpdateReactionTotals(false);
         }
 
         public event EventHandler<string> OnRoomMembersChanged;
 
         public event EventHandler<RoomNotification> OnRoomNotification;
+
+        public event EventHandler<RoomCurrentReactions> OnRoomCurrentReactionsChanged;
 
         public void MemberJoin(RoomMember member)
         {
@@ -144,6 +150,8 @@ namespace PugetSound
 
             OnRoomMembersChanged?.Invoke(this, member.UserName);
 
+            UpdateReactionTotals();
+
             // this was the last member to leave
             if (!_members.Any())
             {
@@ -184,12 +192,6 @@ namespace PugetSound
                     // do the loop on a tmp list of members, so if someone joins mid-play we don't err out
                     var tmpMembers = _members.ToList();
 
-                    // start songs for everyone (OLD)
-                    //foreach (var roomMember in tmpMembers)
-                    //{
-                    //    await PlaySong(roomMember, song);
-                    //}
-
                     // start songs for everyone (NEW)
                     var sw = new Stopwatch();
                     sw.Start();
@@ -201,6 +203,13 @@ namespace PugetSound
                     // set handled
                     _handledUntil = DateTimeOffset.Now.AddMilliseconds(song.DurationMs);
                     _currentTrack = song;
+
+                    // clear reactions & update them
+                    foreach (var roomMember in tmpMembers)
+                    {
+                        roomMember.ReactionFlagsForCurrentTrack = Reaction.None;
+                    }
+                    UpdateReactionTotals();
 
                     // return state
                     CurrentRoomState = new RoomState
@@ -336,6 +345,47 @@ namespace PugetSound
                 });
                 Debug.WriteLine(e);
             }
+        }
+
+        public bool UserReaction(RoomMember member, string reaction)
+        {
+            try
+            {
+                var actualReaction = Enum.Parse<Reaction>(reaction, true);
+
+                var currentReactions = member.ReactionFlagsForCurrentTrack;
+                member.ReactionFlagsForCurrentTrack |= actualReaction;
+
+                if (currentReactions == member.ReactionFlagsForCurrentTrack) return false;
+
+                UpdateReactionTotals();
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                _logger.Log(LogLevel.Warning, "{Username} failed to react to track with {Reaction} because {@Exception}", member.UserName, reaction, e);
+                Debug.WriteLine(e);
+                return false;
+            }
+        }
+
+        private void UpdateReactionTotals(bool sendUpdate = true)
+        {
+            var reactionTotals = Enum.GetValues(typeof(Reaction))
+                .Cast<Reaction>()
+                .ToDictionary(
+                    x => x,
+                    y => _members.Count(z => z.ReactionFlagsForCurrentTrack.HasFlag(y)));
+
+            CurrentReactionTotals = reactionTotals;
+
+            if (!sendUpdate) return;
+
+            OnRoomCurrentReactionsChanged?.Invoke(this, new RoomCurrentReactions
+            {
+                ReactionTotals = reactionTotals
+            });
         }
     }
 }
