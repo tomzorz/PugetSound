@@ -64,7 +64,7 @@ body {
     margin-top: 0;
     margin-left: 0;
     margin-right: 0;
-    margin-bottom: 60px;
+    margin-bottom: 96px;
 }
 
 .footer {
@@ -77,6 +77,7 @@ body {
 
 /* --------------------- custom stuff --------------------- */
 
+body:not(.user-is-tabbing) input[type=text]:focus,
 body:not(.user-is-tabbing) input[type=button]:focus,
 body:not(.user-is-tabbing) input[type=submit]:focus,
 body:not(.user-is-tabbing) input[type=reset]:focus,
@@ -473,6 +474,54 @@ a.whitelink:hover {
 
 .puget-track-progress {
     max-width: 100%;
+}
+
+#pugetChatMessagesArea {
+    width: 100%;
+    padding: 1rem 1rem 0.5rem 1rem;
+    height: 11rem;
+    overflow-y: scroll;
+    border-radius: 10px 10px 0 0;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+#pugetChatMessagesArea span {
+    display: block;
+}
+
+#pugetChatControlsArea {
+    position: relative;
+    height: 26px;
+}
+
+#pugetChatControlsArea input {
+    background: rgba(0, 0, 0, 0.4);
+    color: white;
+    border-radius: 0 0 0 10px;
+    margin: 0;
+    width: calc(100% - 80px);
+    border: none;
+    padding: 0 0 0 1rem;
+    position: absolute;
+    left: 0;
+    height: 26px;
+}
+
+#pugetChatControlsArea button {
+    background-color: #1ed760;
+    color: white;
+    border-radius: 0 0 10px 0;
+    margin: 0;
+    width: 80px;
+    border: none;
+    padding: 0;
+    position: absolute;
+    right: 0;
+    height: 26px;
+}
+
+#pugetChatControlsArea button:hover {
+    background-color: #2ee770;
 }
 
 @keyframes flashing-yellow-border {

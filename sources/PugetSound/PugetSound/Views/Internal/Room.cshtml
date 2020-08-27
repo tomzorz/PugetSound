@@ -55,6 +55,17 @@
     </div>
     <hr />
     <div class="row">
+        <div class="col-sm-12">
+            <div id="pugetChatMessagesArea">
+            </div>
+            <div id="pugetChatControlsArea">
+                <input type="text" id="pugetChatInput" value="" placeholder="Type chat message here..." />
+                <button type="button" id="pugetChatButton">Send</button>
+            </div>
+        </div>
+    </div>
+    <hr />
+    <div class="row">
         <div class="col-sm-4 controls-area">
             <h3>Controls</h3>
             <input type="button" class="redButton" id="leaveRoomButton" value="Leave Room" />
@@ -263,6 +274,20 @@
         });
     });
 
+    connection.on("Chat", function (username, message) {
+        // create
+        const span = document.createElement("span");
+        span.innerText = username + ": " + message;
+
+        const chatArea = document.getElementById("pugetChatMessagesArea");
+
+        // add
+        chatArea.appendChild(span);
+
+        // scroll
+        chatArea.scrollTop = chatArea.scrollHeight;
+    });
+
     // inv link
 
     let inviteLink = document.getElementById("invlink-hidden").href;
@@ -391,6 +416,32 @@
                 event.preventDefault();
             });
     });
+
+    document.getElementById("pugetChatButton").addEventListener("click", function (event) {
+        const chatInput = document.getElementById("pugetChatInput");
+
+        connection.invoke("sendMessage", chatInput.value).catch(function (err) {
+            return console.error(err.toString());
+        });
+
+        chatInput.value = "";
+
+        // gtag
+        gtag('event', 'chat_message',
+            {
+                'event_category': '@Model.RoomName'
+            });
+
+        event.preventDefault();
+    });
+
+    document.getElementById("pugetChatInput")
+        .addEventListener("keyup", function(event) {
+            event.preventDefault();
+            if (event.keyCode === 13) {
+                document.getElementById("pugetChatButton").click();
+            }
+        });
 
     // window close
 
