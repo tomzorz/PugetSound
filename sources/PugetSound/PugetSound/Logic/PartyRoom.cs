@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using PugetSound.Auth;
+using PugetSound.Data.Services;
 using PugetSound.Logic;
 using SpotifyAPI.Web;
 using SpotifyAPI.Web.Enums;
@@ -16,12 +17,13 @@ namespace PugetSound
     {
         private readonly ILogger _logger;
         private readonly SpotifyAccessService _spotifyAccessService;
+        private readonly UserScoreService _userScoreService;
         private DateTimeOffset _handledUntil;
         private DateTimeOffset _timeSinceEmpty;
         private int _currentDjNumber;
         private FullTrack _currentTrack;
 
-        private readonly DateTimeOffset CustomFutureDateTimeOffset = new DateTimeOffset(9999, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        private readonly DateTimeOffset _customFutureDateTimeOffset = new DateTimeOffset(9999, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
         public DateTimeOffset TimeSinceEmpty => _timeSinceEmpty;
 
@@ -39,14 +41,15 @@ namespace PugetSound
 
         public Dictionary<Reaction, int> CurrentReactionTotals { get; private set; }
 
-        public PartyRoom(string roomId, ILogger logger, SpotifyAccessService spotifyAccessService)
+        public PartyRoom(string roomId, ILogger logger, SpotifyAccessService spotifyAccessService, UserScoreService userScoreService)
         {
             _logger = logger;
             _spotifyAccessService = spotifyAccessService;
+            _userScoreService = userScoreService;
             RoomId = roomId;
             _members = new List<RoomMember>();
             _roomEvents = new List<IRoomEvent>();
-            _timeSinceEmpty = CustomFutureDateTimeOffset;
+            _timeSinceEmpty = _customFutureDateTimeOffset;
 
             _handledUntil = DateTimeOffset.Now;
             _currentDjNumber = -1;
@@ -80,7 +83,7 @@ namespace PugetSound
 
             if (_currentTrack != null) StartSongForMemberUgly(member);
 
-            _timeSinceEmpty = CustomFutureDateTimeOffset;
+            _timeSinceEmpty = _customFutureDateTimeOffset;
         }
 
         private async void StartSongForMemberUgly(RoomMember member)
@@ -168,6 +171,28 @@ namespace PugetSound
                 {
                     // we don't change room state here
                     return new RoomState();
+                }
+
+                // award points based on the track
+                if (_currentTrack != null)
+                {
+                    // 0 points base if song got skipped, 1 if not
+                    var score = CurrentRoomState.SongFinishesAtUnixTimestamp > DateTimeOffset.Now.ToUnixTimeMilliseconds() ? 0 : 1;
+                    // then 1 point for every reaction
+                    foreach (var roomMember in _members)
+                    {
+                        // could write something for this, but eh...
+                        if (roomMember.ReactionFlagsForCurrentTrack.HasFlag(Reaction.Heart)) score += 1;
+                        if (roomMember.ReactionFlagsForCurrentTrack.HasFlag(Reaction.Rock)) score += 1;
+                        if (roomMember.ReactionFlagsForCurrentTrack.HasFlag(Reaction.Flame)) score += 1;
+                        if (roomMember.ReactionFlagsForCurrentTrack.HasFlag(Reaction.Clap)) score += 1;
+                    }
+
+                    // update score
+                    await _userScoreService.IncreaseScoreFoUser(CurrentRoomState.CurrentDjUsername, score);
+
+                    // update values
+                    OnRoomMembersChanged?.Invoke(this, null);
                 }
 
                 _currentTrack = null;

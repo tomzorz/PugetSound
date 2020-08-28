@@ -16,6 +16,8 @@ namespace PugetSound.Logic
 
         public int DjOrderNumber { get; set; }
 
+        public string Score { get; set; }
+
         [JsonIgnore]
         public string ConnectionId { get; set; }
 

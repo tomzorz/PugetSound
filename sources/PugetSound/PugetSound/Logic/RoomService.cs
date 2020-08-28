@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using PugetSound.Auth;
+using PugetSound.Data.Services;
 using PugetSound.Helpers;
 using PugetSound.Hubs;
 
@@ -18,13 +19,16 @@ namespace PugetSound.Logic
         private readonly ILogger<RoomService> _logger;
         private readonly ILoggerFactory _loggerFactory;
         private readonly SpotifyAccessService _spotifyAccessService;
+        private readonly UserScoreService _userScoreService;
 
-        public RoomService(IHubContext<RoomHub, IRoomHubInterface> roomHubContext, ILogger<RoomService> logger, ILoggerFactory loggerFactory, SpotifyAccessService spotifyAccessService)
+        public RoomService(IHubContext<RoomHub, IRoomHubInterface> roomHubContext, ILogger<RoomService> logger, ILoggerFactory loggerFactory, SpotifyAccessService spotifyAccessService,
+            UserScoreService userScoreService)
         {
             _roomHubContext = roomHubContext;
-            this._logger = logger;
+            _logger = logger;
             _loggerFactory = loggerFactory;
             _spotifyAccessService = spotifyAccessService;
+            _userScoreService = userScoreService;
             _rooms = new Dictionary<string, PartyRoom>();
             _memberRoomCache = new Dictionary<string, PartyRoom>();
         }
@@ -45,7 +49,7 @@ namespace PugetSound.Logic
             if (_rooms.ContainsKey(roomId)) return _rooms[roomId];
 
             var roomLogger = _loggerFactory.CreateLogger<PartyRoom>();
-            var room = new PartyRoom(roomId, roomLogger, _spotifyAccessService);
+            var room = new PartyRoom(roomId, roomLogger, _spotifyAccessService, _userScoreService);
             room.OnRoomMembersChanged += Room_OnRoomMembersChanged;
             room.OnRoomNotification += Room_OnRoomNotification;
             room.OnRoomCurrentReactionsChanged += Room_OnRoomCurrentReactionsChanged;
@@ -109,7 +113,7 @@ namespace PugetSound.Logic
             }
 
             // update web clients
-            var (listeners, djs) = room.Members.SplitMembers();
+            var (listeners, djs) = await room.Members.UpdateAndSplitMembers(_userScoreService);
             await _roomHubContext.Clients.Group(room.RoomId).ListenersChanged(listeners);
             await _roomHubContext.Clients.Group(room.RoomId).DjsChanged(djs);
         }

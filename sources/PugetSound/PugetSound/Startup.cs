@@ -8,11 +8,14 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using PugetSound.Auth;
+using PugetSound.Data;
+using PugetSound.Data.Services;
 using PugetSound.Hubs;
 using PugetSound.Logic;
 using PugetSound.Routing;
@@ -34,6 +37,12 @@ namespace PugetSound
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddDbContext<AppDbContext>(options =>
+            {
+                options.UseSqlite("Data Source=pugetsound.sqlite");
+            });
+
+            services.AddSingleton<UserScoreService>();
             services.AddSingleton<RoomService>();
 
             services.AddControllersWithViews(configure =>

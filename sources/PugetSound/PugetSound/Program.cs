@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using PugetSound.Data;
 using PugetSound.Logic;
 using Serilog;
 using Serilog.Events;
@@ -60,8 +61,25 @@ namespace PugetSound
 
             try
             {
-                Log.Information("Starting web host");
-                CreateHostBuilder(args).Build().Run();
+                Log.Information("Creating web host...");
+                var host = CreateHostBuilder(args).Build();
+
+                Log.Information("Initializing database...");
+                using (var scope = host.Services.CreateScope())
+                {
+                    try
+                    {
+                        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                        DbInitializer.Initialize(context);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("Failed to initialize database because {@Exception}", ex);
+                    }
+                }
+
+                Log.Information("Starting web host...");
+                host.Run();
             }
             catch (Exception ex)
             {

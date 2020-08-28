@@ -1,9 +1,8 @@
 # Windows ignores
 Thumbs.db
 Thumbs.db.meta
-
 # Mac ignores
 *.DS_Store
 *.directory
-
 # Add your custom repo-wide rules below: 
+/sources/PugetSound/PugetSound/pugetsound.sqlite

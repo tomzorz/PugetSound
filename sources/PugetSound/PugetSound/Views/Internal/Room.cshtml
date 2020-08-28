@@ -191,7 +191,7 @@
         // add members
         listeners.forEach(listener => {
             const li = document.createElement("li");
-            li.innerHTML = listener.friendlyName + ' <a href="spotify:user:' + listener.userName + '" class="badge badge-primary">🔗 Profile</a>';
+            li.innerHTML = listener.friendlyName + ' 🏅<span class="puget-user-score">' + listener.score + '</span> <a href="spotify:user:' + listener.userName + '" class="badge badge-primary">🔗 Profile</a>';
             listenerList.appendChild(li);
         });
 
@@ -216,7 +216,7 @@
         // add members
         djs.forEach(dj => {
             const li = document.createElement("li");
-            li.innerHTML = dj.friendlyName + '<sup> [' + dj.djOrderNumber +']</sup> <a href="spotify:user:' + dj.userName + '" class="badge badge-primary">🔗 Profile</a>';
+            li.innerHTML = dj.friendlyName + '<sup> [' + dj.djOrderNumber + ']</sup> 🏅<span class="puget-user-score">' + dj.score + '</span> <a href="spotify:user:' + dj.userName + '" class="badge badge-primary">🔗 Profile</a>';
             djList.appendChild(li);
         });
 

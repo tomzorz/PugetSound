@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using PugetSound.Auth;
+using PugetSound.Data.Services;
 using PugetSound.Helpers;
 using PugetSound.Logic;
 
@@ -16,11 +15,13 @@ namespace PugetSound.Hubs
     {
         private readonly RoomService _roomService;
         private readonly ILogger<RoomHub> _logger;
+        private readonly UserScoreService _userScoreService;
 
-        public RoomHub(RoomService roomService, ILogger<RoomHub> _logger)
+        public RoomHub(RoomService roomService, ILogger<RoomHub> logger, UserScoreService userScoreService)
         {
             _roomService = roomService;
-            this._logger = _logger;
+            _logger = logger;
+            _userScoreService = userScoreService;
         }
 
         public override async Task OnConnectedAsync()
@@ -56,7 +57,7 @@ namespace PugetSound.Hubs
             _logger.Log(LogLevel.Information, "{User} saying hello", username);
 
             // send down state
-            var (listeners, djs) = room.Members.SplitMembers();
+            var (listeners, djs) = await room.Members.UpdateAndSplitMembers(_userScoreService);
 
             await Clients.Caller.ListenersChanged(listeners);
             await Clients.Caller.DjsChanged(djs);

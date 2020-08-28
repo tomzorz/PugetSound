@@ -381,6 +381,11 @@ a.whitelink:hover {
     line-height: 1rem;
 }
 
+span.puget-user-score {
+    color: yellow;
+    font-size: 0.8rem;
+}
+
 #notification-area {
     position: fixed;
     top: 0;
