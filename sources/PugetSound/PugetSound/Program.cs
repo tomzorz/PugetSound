@@ -17,20 +17,16 @@ namespace PugetSound
      * FEATURES
      * - add phone / pc webapp meta info maybe
      * - clean up code (ongoing effort)
-     * - add whitelist?
      * - create playlist from room history
-     * - add chat
-     * - add reactions
      *
      * IMPROVEMENTS
-     * - add retry play for 5xx error (room failQueue, FailEvent counts down, room worker calls fail events)
      * - add room history who voted to skip song
      * - add progress bar / votes required to vote skip song button
      * - fetch upcoming 1-3 songs for every user on queue listing, show them as upcoming
      *
      * BUGS
-     * - leave room doesn't always leaves room? only do it on actual disconnect success
      * - after leave room joining a new one doesn't work?
+     * - spotify refresh token shenanigans
      *
      */
 

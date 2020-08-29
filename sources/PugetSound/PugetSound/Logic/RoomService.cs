@@ -143,6 +143,10 @@ namespace PugetSound.Logic
 
                 try
                 {
+                    // do retry tasks
+                    await partyRoom.Value.DoRetryTasks();
+
+                    // handle room state / play next when applicable
                     var roomState = await partyRoom.Value.TryPlayNext();
 
                     if (!roomState.IsPlayingSong) continue;

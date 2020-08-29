@@ -25,6 +25,8 @@ namespace PugetSound
 
         private readonly DateTimeOffset _customFutureDateTimeOffset = new DateTimeOffset(9999, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
+        private readonly List<Func<Task>> _roomRetries;
+
         public DateTimeOffset TimeSinceEmpty => _timeSinceEmpty;
 
         public string RoomId { get; }
@@ -50,6 +52,7 @@ namespace PugetSound
             _members = new List<RoomMember>();
             _roomEvents = new List<IRoomEvent>();
             _timeSinceEmpty = _customFutureDateTimeOffset;
+            _roomRetries = new List<Func<Task>>();
 
             _handledUntil = DateTimeOffset.Now;
             _currentDjNumber = -1;
@@ -188,11 +191,14 @@ namespace PugetSound
                         if (roomMember.ReactionFlagsForCurrentTrack.HasFlag(Reaction.Clap)) score += 1;
                     }
 
-                    // update score
-                    await _userScoreService.IncreaseScoreFoUser(CurrentRoomState.CurrentDjUsername, score);
+                    // update score if needed
+                    if (score > 0)
+                    {
+                        await _userScoreService.IncreaseScoreForUser(CurrentRoomState.CurrentDjUsername, score);
 
-                    // update values
-                    OnRoomMembersChanged?.Invoke(this, null);
+                        // update values as we have new scores
+                        OnRoomMembersChanged?.Invoke(this, null);
+                    }
                 }
 
                 _currentTrack = null;
@@ -263,7 +269,7 @@ namespace PugetSound
             }
         }
 
-        private async Task PlaySong(RoomMember member, FullTrack song, int positionMs = 0)
+        private async Task PlaySong(RoomMember member, FullTrack song, int positionMs = 0, bool canRetry = true)
         {
             try
             {
@@ -293,7 +299,25 @@ namespace PugetSound
                     Message = $"Failed to play song",
                     TargetId = member.ConnectionId
                 });
-                // oh well
+
+                if (e.Message.Contains("HTTP 5") && canRetry)
+                {
+                    // if it's a server side error let's add it to the retry queue
+                    async Task RetryTask()
+                    {
+                        // make sure user hasn't left in the last room-cycle
+                        if (!_members.Contains(member)) return;
+                        // try starting song again
+                        var left = _handledUntil.ToUnixTimeMilliseconds() - DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                        await PlaySong(member, _currentTrack, (int) (_currentTrack.DurationMs - left), false);
+                    }
+
+                    _logger.Log(LogLevel.Information, "Added retry task for {UserName}", member.UserName);
+
+                    _roomRetries.Add(RetryTask);
+                }
+                // else oh well
+
                 Debug.WriteLine(e);
             }
         }
@@ -411,6 +435,22 @@ namespace PugetSound
             {
                 ReactionTotals = reactionTotals
             });
+        }
+
+        public async Task DoRetryTasks()
+        {
+            // do nothing if there are no retry events
+            if (!_roomRetries.Any()) return;
+
+            var tasks = _roomRetries.Select(x => x()).ToList();
+
+            var sw = new Stopwatch();
+            sw.Start();
+            await Task.WhenAll(tasks);
+            sw.Stop();
+            _logger.Log(LogLevel.Information, "Took {TimedApiRetryPlayForAll} to retry starting songs for {RetryCount} room members", sw.Elapsed, tasks.Count);
+
+            _roomRetries.Clear();
         }
     }
 }

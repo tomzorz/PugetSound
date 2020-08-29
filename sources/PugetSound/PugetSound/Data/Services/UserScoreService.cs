@@ -44,7 +44,7 @@ namespace PugetSound.Data.Services
             }
         }
 
-        public async Task IncreaseScoreFoUser(string username, int score)
+        public async Task IncreaseScoreForUser(string username, int score)
         {
             using var scope = _serviceScopeFactory.CreateScope();
 
