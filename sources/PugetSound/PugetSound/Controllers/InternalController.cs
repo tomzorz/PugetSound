@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -8,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using PugetSound.Auth;
 using PugetSound.Logic;
 using PugetSound.Models;
+using SpotifyAPI.Web.Enums;
 
 namespace PugetSound.Controllers
 {
@@ -28,9 +30,9 @@ namespace PugetSound.Controllers
 
         public async Task<IActionResult> Index(string join = null)
         {
-            var api = await _spotifyAccessService.TryGetMemberApi(HttpContext.User.Claims.GetSpotifyUsername());
-
             var username = HttpContext.User.Claims.GetSpotifyUsername();
+
+            var api = await _spotifyAccessService.TryGetMemberApi(username);
 
             // guarantee playlist
             var profile = await api.GetPrivateProfileAsync();
@@ -41,7 +43,8 @@ namespace PugetSound.Controllers
 
             var offset = 0;
             const int paginationLimit = 50;
-            var playlists = api.GetUserPlaylists(profile.Id, paginationLimit, offset);
+            var playlists = await api.GetUserPlaylistsAsync(profile.Id, paginationLimit, offset);
+            // ReSharper disable once UselessBinaryOperation (this seems to be a resharper issue)
             offset += paginationLimit;
 
             do
@@ -58,7 +61,7 @@ namespace PugetSound.Controllers
                     break;
                 }
 
-                playlists = api.GetUserPlaylists(profile.Id, paginationLimit, offset);
+                playlists = await api.GetUserPlaylistsAsync(profile.Id, paginationLimit, offset);
                 offset += paginationLimit;
             } while (playlists.HasNextPage());
 
@@ -124,9 +127,37 @@ namespace PugetSound.Controllers
         private const string NaughtyRoomName = "for-naughty-people";
 
         [HttpPost]
-        public IActionResult Room(IndexModel room)
+        public async Task<IActionResult> Room(IndexModel room)
         {
             var username = HttpContext.User.Claims.GetSpotifyUsername();
+
+            // turn off shuffle and repeat, best effort...
+            try
+            {
+                var api = await _spotifyAccessService.TryGetMemberApi(username);
+
+                var devices = await api.GetDevicesAsync();
+
+                devices.ThrowOnError(nameof(api.GetDevices));
+
+                if (!devices.Devices.Any()) throw new Exception("No devices available to set shuffle/repeat on!");
+
+                var device = devices.Devices.FirstOrDefault(x => x.IsActive) ?? devices.Devices.First();
+
+                var repeatResult = await api.SetRepeatModeAsync(RepeatState.Off, device.Id);
+                repeatResult.ThrowOnError(nameof(api.SetRepeatModeAsync));
+
+                var shuffleResult = await api.SetShuffleAsync(false, device.Id);
+                shuffleResult.ThrowOnError(nameof(api.SetShuffleAsync));
+
+                _logger.Log(LogLevel.Information, "Turned off shuffle and repeat for {Username}", username);
+            }
+            catch (Exception e)
+            {
+                // oh well
+                Debug.WriteLine(e);
+                _logger.Log(LogLevel.Warning, "Failed to turn off shuffle and/or repeat for {Username} upon entering room because {@Exception}", username, e);
+            }
 
             // prev room?
             var alreadyInRoom = _roomService.TryGetRoomForUsername(username, out var prevRoom);

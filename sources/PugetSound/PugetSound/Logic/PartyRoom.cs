@@ -285,9 +285,6 @@ namespace PugetSound
                 var resume = await api.ResumePlaybackAsync(deviceId:device.Id, uris: new List<string> { song.Uri }, offset: 0, positionMs: positionMs);
 
                 resume.ThrowOnError(nameof(api.ResumePlaybackAsync));
-
-                // we don't care if this one fails
-                await api.SetRepeatModeAsync(RepeatState.Off, device.Id);
             }
             catch (Exception e)
             {
