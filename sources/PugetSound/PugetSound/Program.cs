@@ -57,6 +57,8 @@ namespace PugetSound
 
             try
             {
+                Log.Information($"Initializing PugetSound revision {Revision.Footer}");
+
                 Log.Information("Creating web host...");
                 var host = CreateHostBuilder(args).Build();
 

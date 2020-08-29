@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@using PugetSound
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -25,7 +26,7 @@
     <meta name="theme-color" content="#ffffff">
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css?ver=20200829g" />
+    <link rel="stylesheet" href="~/css/site.css?ver=@Revision.CssQuery" />
 </head>
 <body>
     <div class="container mt-4">
@@ -38,7 +39,7 @@
     </div>
     <footer class="footer">
         <div class="container">
-            <span class="footer-debug">PugetSound (revision 2020-08-29-gamma) - @ViewData["Page"] <span id="footer-debug-custom"></span></span>
+            <span class="footer-debug">PugetSound (revision @Revision.Footer) - @ViewData["Page"] <span id="footer-debug-custom"></span></span>
             <span class="footer-info">&copy; 2020 <a href="https://tomzorz.me">Tamás Deme 'tomzorz'</a>. Stay home (if possible), wash your hands and <strong>wear a mask</strong>. Optionally find me <a href="https://twitter.com/tomzorz_">on twitter</a>.</span>
         </div>
     </footer>

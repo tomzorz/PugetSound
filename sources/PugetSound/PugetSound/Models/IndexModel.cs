@@ -1,5 +1,3 @@
-using SpotifyAPI.Web.Models;
-
 namespace PugetSound.Models
 {
     public class IndexModel
