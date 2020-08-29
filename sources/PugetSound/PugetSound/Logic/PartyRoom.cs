@@ -176,8 +176,8 @@ namespace PugetSound
                     return new RoomState();
                 }
 
-                // award points based on the track
-                if (_currentTrack != null)
+                // award points based on the track if there are multiple users in the room
+                if (_currentTrack != null && _members.Count > 1)
                 {
                     // 0 points base if song got skipped, 1 if not
                     var score = CurrentRoomState.SongFinishesAtUnixTimestamp > DateTimeOffset.Now.ToUnixTimeMilliseconds() ? 0 : 1;
@@ -398,6 +398,9 @@ namespace PugetSound
 
         public bool UserReaction(RoomMember member, string reaction)
         {
+            // no awarding your own song
+            if (member.UserName == CurrentRoomState.CurrentDjUsername) return false;
+
             try
             {
                 var actualReaction = Enum.Parse<Reaction>(reaction, true);
