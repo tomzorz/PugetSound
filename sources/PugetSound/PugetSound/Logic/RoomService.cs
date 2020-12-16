@@ -75,11 +75,11 @@ namespace PugetSound.Logic
             // update web clients
             if (string.IsNullOrWhiteSpace(e.TargetId))
             {
-                await _roomHubContext.Clients.Group(room.RoomId).ShowNotification(e.Category.ToString().ToLowerInvariant(), e.Message);
+                await _roomHubContext.Clients.Group(room.RoomId).ShowNotification(e.Category.Stringify(), e.Message);
             }
             else
             {
-                await _roomHubContext.Clients.Client(e.TargetId).ShowNotification(e.Category.ToString().ToLowerInvariant(), e.Message);
+                await _roomHubContext.Clients.Client(e.TargetId).ShowNotification(e.Category.Stringify(), e.Message);
             }
         }
 
@@ -151,6 +151,8 @@ namespace PugetSound.Logic
 
                     _logger.Log(LogLevel.Information, "{Room} playing song {SongTitle} by {SongArtist}, queued by {Username}",
                         partyRoom.Value.RoomId, roomState.CurrentSongTitle, roomState.CurrentSongArtist, roomState.CurrentDjUsername);
+
+                    await _roomHubContext.Clients.Group(partyRoom.Key).Chat(Constants.RoomChatUsername, $"Now playing {roomState.CurrentSongTitle} by {roomState.CurrentSongArtist}");
 
                     await _roomHubContext.Clients.Group(partyRoom.Key).SongChanged(roomState);
                 }

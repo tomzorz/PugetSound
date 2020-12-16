@@ -1,4 +1,5 @@
 ﻿@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@using PugetSound.Logic
 @model PugetSound.Models.RoomModel
 @{
     ViewData["Title"] = $"Room {Model.RoomName} - PugetSound";
@@ -59,7 +60,7 @@
             <div id="pugetChatMessagesArea">
             </div>
             <div id="pugetChatControlsArea">
-                <input type="text" id="pugetChatInput" value="" placeholder="Type chat message here..." />
+                <input type="text" id="pugetChatInput" value="" placeholder="Type chat message here..." maxlength="@Constants.MaxChatMessageLength" />
                 <button type="button" id="pugetChatButton">Send</button>
             </div>
         </div>
@@ -115,6 +116,141 @@
     let timeEnd = timeNow;
     let timeDifference = 0;
 
+    // prepare animations
+
+    class Heart extends mojs.CustomShape {
+        getShape() {
+            return '<path d="M92.6 7.4c-10-9.9-26-9.9-35.9 0l-4.4 4.3a3.4 3.4 0 0 1-4.7 0l-4.3-4.3c-10-9.9-26-9.9-35.9 0a25 25 0 0 0 0 35.5l22.4 22.2 13.5 13.4a9.5 9.5 0 0 0 13.4 0L70.2 65 92.6 43a25 25 0 0 0 0-35.5z"/>';
+        }
+    }
+
+    mojs.addShape('heart', Heart);
+
+    class Flame extends mojs.CustomShape {
+        getShape() {
+            return '<path d="M41.1272148,94.9067799 C28.6563243,90.7731094 19.6600342,79.0165529 19.6600342,65.1588003 C19.6600342,38.9984366 44.726201,35.8961721 43.8906621,5 C70.4524762,20.1563818 67.0752345,45.6860116 67.0752345,45.6860116 C67.0752345,45.6860116 72.8119084,42.6832937 72.8119084,35.209857 C79.4189826,45.9571375 82.3254512,56.3274309 82.3254512,65.1588003 C82.3254512,79.1222119 73.1914529,90.9522639 60.5724127,95 C65.7739071,91.7695793 69.2372495,86.0050611 69.2372495,79.431636 C69.2372495,64.1415604 54.9980467,61.9170224 54.8693849,44.270328 C40.4598241,55.4330997 44.3812147,74.5676007 44.3812147,74.5676007 C44.3812147,74.5676007 37.1718211,72.2608809 38.1713139,61.9272307 C34.1039738,68.2087463 32.610887,74.2699223 32.610887,79.431636 C32.610887,85.9423005 36.0084117,91.6594305 41.1272148,94.9067799 Z"/>';
+        }
+    }
+
+    mojs.addShape('flame', Flame);
+
+    class Rock extends mojs.CustomShape {
+        getShape() {
+            return '<path d="M90.2,24.6c0-3.9-3.2-7.1-7.1-7.1c-3.9,0-7.1,3.2-7.1,7.1l0,19.5c0-4-3.2-7.2-7.2-7.2l0,0c-4,0-7.2,3.2-7.2,7.2v-4.3    c0-4-3.2-7.2-7.2-7.2s-7.2,3.2-7.2,7.2V9.7c0-4-3.2-7.2-7.2-7.2h0c-3.9,0-7.1,3.2-7.1,7.2v50.7c0,1.5-1.8,2.2-2.8,1.2l-7.9-7.8    c-2.5-2.4-6.3-2.8-9.2-0.9c-3.6,2.4-4.3,7.3-1.5,10.7l19.6,23.6c5.4,6.6,13.5,10.3,22,10.3h12.2c13.8,0,24.9-11.2,24.9-24.9    C90.2,63.7,90.2,30.7,90.2,24.6z"/>';
+        }
+    }
+
+    mojs.addShape('rock', Rock);
+
+    class Clap extends mojs.CustomShape {
+        getShape() {
+            return '<path d="M34,24l-5.4-5.4c-0.9-0.9-2.4-1-3.4,0c-0.4,0.4-0.6,0.9-0.7,1.4l11.7,11.7C35.3,29.2,34.3,26.4,34,24z"/><path d="M53.4,50c0.8-5-0.9-12.5-6.8-18.5c-1.1-1.1-2.6-3.8-4-6.2c0,0,0,0,0,0c-1.1-2-2-3.8-2.2-4.3c-0.4-1-1.5-1.7-2.4-1.7    c-4.8,0.2,0.1,12.5,2.1,16.2c0.2,0.4,0.1,1-0.3,1.3c-0.4,0.3-1,0.3-1.3-0.1L22.8,21.1c0,0,0,0-0.1-0.1l-2.5-2.5    c-0.9-0.9-2.4-1-3.4,0c-0.5,0.5-0.7,1.1-0.7,1.7s0.2,1.2,0.7,1.7l12.3,12.3c0.4,0.4,0.4,1,0,1.4s-1,0.4-1.4,0L15.5,23.4L13,20.9    c-1-1-2.6-0.9-3.5,0.1c-0.8,0.9-0.7,2.5,0.3,3.4l3.7,3.7c0,0,0,0,0,0v0c0,0,0,0,0,0l11,11c0.4,0.4,0.4,1,0,1.4s-1,0.4-1.4,0    l-11-11c-1-0.9-2.6-0.9-3.5,0.1c-0.8,0.9-0.7,2.5,0.3,3.4l5,5c0,0,0,0,0,0v0c0,0,0,0,0,0l5.9,5.9c0.4,0.4,0.4,1,0,1.4    s-1,0.4-1.4,0l-5.9-5.9c0,0,0,0,0,0c-0.4-0.4-1-0.7-1.7-0.7c-0.6,0-1.2,0.2-1.7,0.7c-0.5,0.5-0.7,1.1-0.7,1.7    c0,0.6,0.2,1.2,0.7,1.7c7,7,7.7,7.6,9.3,9.6c2.4,3.1,10.8,13.4,17.5,13.8c0.7,0,1.3-0.2,1.8-0.7l15.1-14.1    C53,51,53.3,50.6,53.4,50z"/><path d="M48.7,21.1c-0.4-1-1.4-1.7-2.4-1.7c-1.1,0-2.7,1.3-1.9,5c1.2,2.3,2.7,4.8,3.6,5.7c6.1,6.2,8.2,14.2,7.3,20.2    c-0.1,1-0.6,1.9-1.4,2.6L40.6,65.3c1.7,0.8,3.9,1.4,5.1,0.2l15.1-14.1c0.4-0.4,0.7-0.9,0.8-1.4c0.8-5.3-1.1-12.7-6.8-18.5    C52.9,29.6,49.2,22.3,48.7,21.1z"/><path d="M24.1,16.3c-0.4-0.3-0.5-1-0.2-1.4l3.9-5.1c0.3-0.4,1-0.5,1.4-0.2c0.4,0.3,0.5,1,0.2,1.4l-3.9,5.1     C25.2,16.5,24.5,16.6,24.1,16.3z"/><path d="M18,14.1l-1-7.2c-0.1-0.5,0.3-1.1,0.9-1.1C18.5,5.7,19,6.1,19,6.6l1,7.2c0.1,0.5-0.3,1.1-0.9,1.1     C18.6,15.1,18.1,14.7,18,14.1z"/><path d="M13.3,17.8l-6.4-4.9c-0.4-0.3-0.5-1-0.2-1.4c0.3-0.4,1-0.5,1.4-0.2l6.4,4.9c0.4,0.3,0.5,1,0.2,1.4     C14.4,18,13.8,18.1,13.3,17.8z"/><path d="M64.5,26.4H58c-0.6,0-1-0.4-1-1s0.4-1,1-1h6.4c0.6,0,1,0.4,1,1S65,26.4,64.5,26.4z"/><path d="M55.1,20.7c-0.4-0.4-0.4-1,0-1.4l5.1-5.1c0.4-0.4,1-0.4,1.4,0s0.4,1,0,1.4l-5.1,5.1C56.1,21.1,55.5,21.1,55.1,20.7z"/><path d="M50.3,18.8c-0.6,0-1-0.4-1-1v-8c0-0.6,0.4-1,1-1s1,0.4,1,1v8C51.3,18.3,50.9,18.8,50.3,18.8z"/>';
+        }
+    }
+
+    mojs.addShape('clap', Clap);
+
+    function heartBurst(amount) {
+        return new mojs.Burst({
+            count: amount,
+            degree: 0,
+            angle: 0,
+            radius: { 0: 250 },
+            children: {
+                shape: 'heart',
+                fill: '#E81224',
+                stroke: 'none',
+                radius: 40,
+                scale: {1 : 0, easing: 'cubic.in'},
+                duration: 750,
+                left: 'rand(-400, 400)',
+                top: 0,
+                isForce3d: true,
+                delay: 'rand(0, 400)',
+                angle: -90
+            }
+        });
+    };
+
+    function flameBurst(amount) {
+        return new mojs.Burst({
+            count: amount,
+            degree: 0,
+            angle: 0,
+            radius: { 0: 250 },
+            children: {
+                shape: 'flame',
+                fill: '#F7630C',
+                stroke: 'none',
+                radius: 40,
+                scale: {1 : 0, easing: 'cubic.in'},
+                duration: 750,
+                left: 'rand(-400, 400)',
+                top: 0,
+                isForce3d: true,
+                delay: 'rand(0, 400)',
+                angle: -90
+            }
+        });
+    };
+
+    function rockBurst(amount) {
+        return new mojs.Burst({
+            count: amount,
+            degree: 0,
+            angle: 0,
+            radius: { 0: 250 },
+            children: {
+                fill: '#FFC83D',
+                stroke: 'none',
+                shape: 'rock',
+                radius: 40,
+                scale: {1 : 0, easing: 'cubic.in'},
+                duration: 750,
+                left: 'rand(-400, 400)',
+                top: 0,
+                isForce3d: true,
+                delay: 'rand(0, 400)',
+                angle: -90
+            }
+        });
+    };
+
+    function clapBurst(amount) {
+        return new mojs.Burst({
+            count: amount,
+            degree: 0,
+            angle: 0,
+            radius: { 0: 250 },
+            children: {
+                fill: '#FFC83D',
+                stroke: 'none',
+                shape: 'clap',
+                radius: 40,
+                scale: {1 : 0, easing: 'cubic.in'},
+                duration: 750,
+                left: 'rand(-400, 400)',
+                top: 0,
+                isForce3d: true,
+                delay: 'rand(0, 400)',
+                angle: -90
+            }
+        });
+    };
+
+    const burstDict = {
+        "rock": rockBurst,
+        "flame": flameBurst,
+        "clap": clapBurst,
+        "heart": heartBurst
+    };
+
+    function doReaction(reaction, amount) {
+        reaction(amount)
+            .generate()
+            .replay();
+    }
+
     // disable controls until we know what's up
 
     document.getElementById("leaveRoomButton").disabled = true;
@@ -143,7 +279,7 @@
         document.getElementById("connectionStatus").textContent = 'Connection reestablished';
 
         // say hello
-        connection.invoke("hello", (new Date()).getTime()).catch(function (err) {
+        connection.invoke("hello", (new Date()).getTime()).catch(function(err) {
             return console.error(err.toString());
         });
 
@@ -156,90 +292,100 @@
         document.getElementById("connectionBox").className = "alert alert-danger";
         console.log(`Connection lost due to error "${error}.`);
         document.getElementById("connectionStatus").textContent = 'Connection lost (see log)';
+        window.removeEventListener('beforeunload', beforeUnload, true);
     });
 
     // incoming events
 
-    connection.on("SongChanged", function (roomState) {
-        // song details
-        document.getElementById("currentDj").textContent = roomState.currentDjName;
-        document.getElementById("currentSongArtist").textContent = roomState.currentSongArtist;
-        document.getElementById("currentSongTitle").textContent = roomState.currentSongTitle;
-        document.getElementById("currentSongArt").src = roomState.currentSongArtUrl;
-        timeNow = roomState.songStartedAtUnixTimestamp;
-        timeEnd = roomState.songFinishesAtUnixTimestamp;
+    connection.on("SongChanged",
+        function(roomState) {
+            // song details
+            document.getElementById("currentDj").textContent = roomState.currentDjName;
+            document.getElementById("currentSongArtist").textContent = roomState.currentSongArtist;
+            document.getElementById("currentSongTitle").textContent = roomState.currentSongTitle;
+            document.getElementById("currentSongArt").src = roomState.currentSongArtUrl;
+            timeNow = roomState.songStartedAtUnixTimestamp;
+            timeEnd = roomState.songFinishesAtUnixTimestamp;
 
-        // re-enabled all reaction buttons
-        const reactionButtons = document.getElementsByClassName("puget-reaction-button");
-        [].forEach.call(reactionButtons, function(reactionButton) {
-            reactionButton.disabled = false;
+            // re-enabled all reaction buttons
+            const reactionButtons = document.getElementsByClassName("puget-reaction-button");
+            [].forEach.call(reactionButtons,
+                function(reactionButton) {
+                    reactionButton.disabled = false;
+                });
+
+            // gtag
+            gtag('event',
+                'song_played',
+                {
+                    'event_category': '@Model.RoomName',
+                    'event_label': roomState.currentSongArtist + " - " + roomState.currentSongTitle
+                });
         });
 
-        // gtag
-        gtag('event', 'song_played',
-        {
-                'event_category': '@Model.RoomName',
-                'event_label': roomState.currentSongArtist + " - " + roomState.currentSongTitle
-        });
-    });
+    connection.on("ListenersChanged",
+        function(listeners) {
+            // clear out list
+            const listenerList = document.getElementById("listenerList");
+            listenerList.innerHTML = "";
 
-    connection.on("ListenersChanged", function (listeners) {
-        // clear out list
-        const listenerList = document.getElementById("listenerList");
-        listenerList.innerHTML = "";
-
-        // add members
-        listeners.forEach(listener => {
-            const li = document.createElement("li");
-            li.innerHTML = listener.friendlyName + ' 🏅<span class="puget-user-score">' + listener.score + '</span> <a href="spotify:user:' + listener.userName + '" class="badge badge-primary">🔗 Profile</a>';
-            listenerList.appendChild(li);
-        });
-
-        // toggle button
-        document.getElementById("joinListenerButton").disabled = listeners.some(function(listener) {
-            return listener.userName === userName;
-        });
-
-        // gtag
-        gtag('event', 'members_changed',
-            {
-                'event_category': '@Model.RoomName',
-                'event_label': "listeners"
+            // add members
+            listeners.forEach(listener => {
+                const li = document.createElement("li");
+                li.innerHTML = listener.friendlyName + ' 🏅<span class="puget-user-score">' + listener.score + '</span> <a href="spotify:user:' + listener.userName + '" class="badge badge-primary">🔗 Profile</a>';
+                listenerList.appendChild(li);
             });
-    });
 
-    connection.on("DjsChanged", function (djs) {
-        // clear out list
-        const djList = document.getElementById("djList");
-        djList.innerHTML = "";
-
-        // add members
-        djs.forEach(dj => {
-            const li = document.createElement("li");
-            li.innerHTML = dj.friendlyName + '<sup> [' + dj.djOrderNumber + ']</sup> 🏅<span class="puget-user-score">' + dj.score + '</span> <a href="spotify:user:' + dj.userName + '" class="badge badge-primary">🔗 Profile</a>';
-            djList.appendChild(li);
-        });
-
-        // toggle button
-        document.getElementById("joinDjButton").disabled = djs.some(function (dj) {
-            return dj.userName === userName;
-        });
-
-        // gtag
-        gtag('event', 'members_changed',
-            {
-                'event_category': '@Model.RoomName',
-                'event_label': "djs"
+            // toggle button
+            document.getElementById("joinListenerButton").disabled = listeners.some(function(listener) {
+                return listener.userName === userName;
             });
-    });
 
-    connection.on("ApplyClientTimeDifference", function(difference) {
-        timeDifference = difference;
-    });
+            // gtag
+            gtag('event',
+                'members_changed',
+                {
+                    'event_category': '@Model.RoomName',
+                    'event_label': "listeners"
+                });
+        });
 
-    connection.on("ShowNotification", function (category, message) {
-        showNotification(category, message);
-    });
+    connection.on("DjsChanged",
+        function(djs) {
+            // clear out list
+            const djList = document.getElementById("djList");
+            djList.innerHTML = "";
+
+            // add members
+            djs.forEach(dj => {
+                const li = document.createElement("li");
+                li.innerHTML = dj.friendlyName + '<sup> [' + dj.djOrderNumber + ']</sup> 🏅<span class="puget-user-score">' + dj.score + '</span> <a href="spotify:user:' + dj.userName + '" class="badge badge-primary">🔗 Profile</a>';
+                djList.appendChild(li);
+            });
+
+            // toggle button
+            document.getElementById("joinDjButton").disabled = djs.some(function(dj) {
+                return dj.userName === userName;
+            });
+
+            // gtag
+            gtag('event',
+                'members_changed',
+                {
+                    'event_category': '@Model.RoomName',
+                    'event_label': "djs"
+                });
+        });
+
+    connection.on("ApplyClientTimeDifference",
+        function(difference) {
+            timeDifference = difference;
+        });
+
+    connection.on("ShowNotification",
+        function(category, message) {
+            showNotification(category, message);
+        });
 
     function showNotification(category, message) {
         // create
@@ -251,55 +397,63 @@
 
         // make it appear
         document.getElementById("notification-area").appendChild(div);
-        requestAnimationFrame(function () {
-            setTimeout(function () {
+        requestAnimationFrame(function() {
+            setTimeout(function() {
                 div.classList.remove("puget-notification-hidden");
             });
         });
 
         // make it disappear
-        setTimeout(function () {
-            div.classList.add("puget-notification-hidden");
-            div.addEventListener("transitionend", function () {
-                document.getElementById("notification-area").removeChild(div);
-            });
-        }, 8000);
+        setTimeout(function() {
+                div.classList.add("puget-notification-hidden");
+                div.addEventListener("transitionend",
+                    function() {
+                        document.getElementById("notification-area").removeChild(div);
+                    });
+            },
+            8000);
     }
 
-    connection.on("UpdateReactionTotals", function (totals) {
-        const reactionButtons = document.getElementsByClassName("puget-reaction-button");
-        [].forEach.call(reactionButtons, function(reactionButton) {
-            const number = totals[reactionButton.dataset.reaction];
-            reactionButton.getElementsByClassName("puget-reaction-button-counter")[0].innerHTML = number;
+    connection.on("UpdateReactionTotals",
+        function(totals) {
+            const reactionButtons = document.getElementsByClassName("puget-reaction-button");
+            [].forEach.call(reactionButtons,
+                function(reactionButton) {
+                    const number = totals[reactionButton.dataset.reaction];
+                    doReaction(burstDict[reactionButton.dataset.reaction], number);
+                    reactionButton.getElementsByClassName("puget-reaction-button-counter")[0].innerHTML = number;
+                });
         });
-    });
 
-    connection.on("Chat", function (username, message) {
-        // create
-        const span = document.createElement("span");
-        span.innerText = username + ": " + message;
+    connection.on("Chat",
+        function(username, message) {
+            // create
+            const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+            const span = document.createElement("span");
+            span.innerText = '['+ timestamp +'] ' + username + ": " + message;
 
-        const chatArea = document.getElementById("pugetChatMessagesArea");
+            const chatArea = document.getElementById("pugetChatMessagesArea");
 
-        // add
-        chatArea.appendChild(span);
+            // add
+            chatArea.appendChild(span);
 
-        // scroll
-        chatArea.scrollTop = chatArea.scrollHeight;
-    });
+            // scroll
+            chatArea.scrollTop = chatArea.scrollHeight;
+        });
 
     // inv link
 
     let inviteLink = document.getElementById("invlink-hidden").href;
     document.getElementById("invlink-copy").value = inviteLink;
-    document.getElementById("invlink-copy").addEventListener("focus", (event) => {
-        event.target.select();
-        document.execCommand("copy");
-    });
+    document.getElementById("invlink-copy").addEventListener("focus",
+        (event) => {
+            event.target.select();
+            document.execCommand("copy");
+        });
 
     // start connection
 
-    connection.start().then(function () {
+    connection.start().then(function() {
         // signal status
         document.getElementById("connectionStatus").innerHTML = "Connection established";
         document.getElementById("connectionBox").className = "alert alert-success";
@@ -312,7 +466,7 @@
         document.getElementById("addToLikedButton").disabled = false;
 
         // say hello
-        connection.invoke("hello", (new Date()).getTime()).catch(function (err) {
+        connection.invoke("hello", (new Date()).getTime()).catch(function(err) {
             return console.error(err.toString());
         });
 
@@ -323,12 +477,13 @@
         showNotification("warning", "If you close this page playback will continue on the backend. To stop, press the [Leave Room] button. You can rejoin this page to press it later.");
 
         // gtag
-        gtag('event', 'user_joined',
+        gtag('event',
+            'user_joined',
             {
                 'event_category': '@Model.RoomName',
                 'event_label': userName
             });
-    }).catch(function (err) {
+    }).catch(function(err) {
         document.getElementById("connectionBox").className = "alert alert-danger";
         console.log(`Connection lost due to error "${error}.`);
         document.getElementById("connectionStatus").textContent = 'Connection lost (see log)';
@@ -337,111 +492,123 @@
 
     // outgoing events
 
-    document.getElementById("leaveRoomButton").addEventListener("click", function (event) {
-        connection.invoke("leaveRoom").then(function () {
-            // gtag
-            gtag('event', 'user_left',
-                {
-                    'event_category': '@Model.RoomName',
-                });
-
-            window.removeEventListener('beforeunload', beforeUnload, true);
-            window.location.href = '/internal';
-        }).catch(function (err) {
-            return console.error(err.toString());
-        });
-
-        event.preventDefault();
-    });
-
-    document.getElementById("joinDjButton").addEventListener("click", function (event) {
-        connection.invoke("becomeDj").catch(function (err) {
-            return console.error(err.toString());
-        });
-        event.preventDefault();
-    });
-
-    document.getElementById("joinListenerButton").addEventListener("click", function (event) {
-        connection.invoke("becomeListener").catch(function (err) {
-            return console.error(err.toString());
-        });
-        event.preventDefault();
-    });
-
-    document.getElementById("voteSkipSongButton").addEventListener("click", function (event) {
-        connection.invoke("voteSkipSong").catch(function (err) {
-            return console.error(err.toString());
-        });
-
-        // gtag
-        gtag('event', 'vote_skip',
-            {
-                'event_category': '@Model.RoomName'
-            });
-
-        event.preventDefault();
-    });
-
-    document.getElementById("addToLikedButton").addEventListener("click", function (event) {
-        connection.invoke("addToLiked").catch(function (err) {
-            return console.error(err.toString());
-        });
-
-        // gtag
-        gtag('event', 'add_to_liked',
-            {
-                'event_category': '@Model.RoomName'
-            });
-
-        event.preventDefault();
-    });
-
-    const reactionButtons = document.getElementsByClassName("puget-reaction-button");
-    [].forEach.call(reactionButtons, function(reactionButton) {
-        reactionButton.addEventListener("click",
-            function(event) {
-                connection.invoke("reactionPressed", reactionButton.dataset.reaction).then(function() {
-                    reactionButton.disabled = true;
-                }).catch(function (err) {
-                    return console.error(err.toString());
-                });
-
+    document.getElementById("leaveRoomButton").addEventListener("click",
+        function(event) {
+            connection.invoke("leaveRoom").then(function() {
                 // gtag
                 gtag('event',
-                    'user_react_' + reactionButton.dataset.reaction,
+                    'user_left',
                     {
-                        'event_category': '@Model.RoomName'
+                        'event_category': '@Model.RoomName',
                     });
 
-                event.preventDefault();
+                window.removeEventListener('beforeunload', beforeUnload, true);
+                window.location.href = '/internal';
+            }).catch(function(err) {
+                return console.error(err.toString());
             });
-    });
 
-    document.getElementById("pugetChatButton").addEventListener("click", function (event) {
-        const chatInput = document.getElementById("pugetChatInput");
-
-        connection.invoke("sendMessage", chatInput.value).catch(function (err) {
-            return console.error(err.toString());
+            event.preventDefault();
         });
 
-        chatInput.value = "";
+    document.getElementById("joinDjButton").addEventListener("click",
+        function(event) {
+            connection.invoke("becomeDj").catch(function(err) {
+                return console.error(err.toString());
+            });
+            event.preventDefault();
+        });
 
-        // gtag
-        gtag('event', 'chat_message',
-            {
-                'event_category': '@Model.RoomName'
+    document.getElementById("joinListenerButton").addEventListener("click",
+        function(event) {
+            connection.invoke("becomeListener").catch(function(err) {
+                return console.error(err.toString());
+            });
+            event.preventDefault();
+        });
+
+    document.getElementById("voteSkipSongButton").addEventListener("click",
+        function(event) {
+            connection.invoke("voteSkipSong").catch(function(err) {
+                return console.error(err.toString());
             });
 
-        event.preventDefault();
-    });
+            // gtag
+            gtag('event',
+                'vote_skip',
+                {
+                    'event_category': '@Model.RoomName'
+                });
+
+            event.preventDefault();
+        });
+
+    document.getElementById("addToLikedButton").addEventListener("click",
+        function(event) {
+            connection.invoke("addToLiked").catch(function(err) {
+                return console.error(err.toString());
+            });
+
+            // gtag
+            gtag('event',
+                'add_to_liked',
+                {
+                    'event_category': '@Model.RoomName'
+                });
+
+            event.preventDefault();
+        });
+
+    const reactionButtons = document.getElementsByClassName("puget-reaction-button");
+    [].forEach.call(reactionButtons,
+        function(reactionButton) {
+            reactionButton.addEventListener("click",
+                function(event) {
+                    connection.invoke("reactionPressed", reactionButton.dataset.reaction).then(function() {
+                        reactionButton.disabled = true;
+                    }).catch(function(err) {
+                        return console.error(err.toString());
+                    });
+
+                    // gtag
+                    gtag('event',
+                        'user_react_' + reactionButton.dataset.reaction,
+                        {
+                            'event_category': '@Model.RoomName'
+                        });
+
+                    event.preventDefault();
+                });
+        });
+
+    document.getElementById("pugetChatButton").addEventListener("click",
+        function(event) {
+            const chatInput = document.getElementById("pugetChatInput");
+
+            connection.invoke("sendMessage", chatInput.value).catch(function(err) {
+                return console.error(err.toString());
+            });
+
+            chatInput.value = "";
+
+            // gtag
+            gtag('event',
+                'chat_message',
+                {
+                    'event_category': '@Model.RoomName'
+                });
+
+            event.preventDefault();
+        });
 
     document.getElementById("pugetChatInput")
-        .addEventListener("keyup", function(event) {
-            event.preventDefault();
-            if (event.keyCode === 13) {
-                document.getElementById("pugetChatButton").click();
-            }
-        });
+        .addEventListener("keyup",
+            function(event) {
+                event.preventDefault();
+                if (event.keyCode === 13) {
+                    document.getElementById("pugetChatButton").click();
+                }
+            });
 
     // window close
 
@@ -466,18 +633,18 @@
         return minutes + ":" + (seconds < 10 ? '0' : '') + seconds;
     }
 
-    setInterval(function(){
-        const current = (new Date()).getTime() + timeDifference;
-        if(timeNow <= current && timeEnd > current) {
-            document.getElementById("currentTime").innerHTML = humanize(current-timeNow) + " (-" + humanize(timeEnd-current) + ")";
-            document.getElementById("currentProgress").max = timeEnd-timeNow;
-            document.getElementById("currentProgress").value = current-timeNow;
-        }
-        if (timeEnd < current) {
-            document.getElementById("currentProgress").max = 100;
-            document.getElementById("currentProgress").value = 100;
-            document.getElementById("currentTime").innerHTML = "Changing songs...";
-        }
-    }, 1000);
-
+    setInterval(function() {
+            const current = (new Date()).getTime() + timeDifference;
+            if (timeNow <= current && timeEnd > current) {
+                document.getElementById("currentTime").innerHTML = humanize(current - timeNow) + " (-" + humanize(timeEnd - current) + ")";
+                document.getElementById("currentProgress").max = timeEnd - timeNow;
+                document.getElementById("currentProgress").value = current - timeNow;
+            }
+            if (timeEnd < current) {
+                document.getElementById("currentProgress").max = 100;
+                document.getElementById("currentProgress").value = 100;
+                document.getElementById("currentTime").innerHTML = "Changing songs...";
+            }
+        },
+        1000);
 </script>

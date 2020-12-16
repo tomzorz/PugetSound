@@ -180,7 +180,11 @@ namespace PugetSound.Hubs
             if (string.IsNullOrWhiteSpace(message)) return;
 
             // no too long messages
-            if (message.Length > 90) return;
+            if (message.Length > Constants.MaxChatMessageLength)
+            {
+                await Clients.Caller.ShowNotification(RoomNotificationCategory.Error.Stringify(), $"Chat message has to be shorter than {Constants.MaxChatMessageLength} characters.");
+                return;
+            }
 
             // ensure room
             var username = Context.User.Claims.GetSpotifyUsername();
@@ -205,7 +209,7 @@ namespace PugetSound.Hubs
             } else
             {
                 // pls wait
-                await Clients.Caller.Chat("[system]", "Chat disabled for 3 seconds.");
+                await Clients.Caller.Chat(Constants.SystemChatUsername, "Chat disabled for 3 seconds.");
             }
         }
     }

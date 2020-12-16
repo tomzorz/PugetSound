@@ -8,5 +8,7 @@ namespace PugetSound.Helpers
     {
         public static Dictionary<string, int> ToClientReactionTotals(this IDictionary<Reaction, int> dict) =>
             dict.ToDictionary(x => x.Key.ToString().ToLowerInvariant(), y => y.Value);
+
+        public static string Stringify(this RoomNotificationCategory rnc) => rnc.ToString().ToLowerInvariant();
     }
 }
