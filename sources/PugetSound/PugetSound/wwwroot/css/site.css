@@ -471,6 +471,11 @@ span.puget-user-score {
     color: white;
 }
 
+div[data-name="mojs-shape"] svg path {
+    transform-origin: 50% 50%;
+    transform: scale(0.66) rotate(-90deg);
+}
+
 .puget-album-art {
     max-width: 100%;
     max-height: 250px;

@@ -20,10 +20,10 @@ namespace PugetSound.Controllers
         private readonly ILogger<InternalController> _logger;
         private readonly SpotifyAccessService _spotifyAccessService;
 
-        public InternalController(RoomService roomService, ILogger<InternalController> _logger, SpotifyAccessService spotifyAccessService)
+        public InternalController(RoomService roomService, ILogger<InternalController> logger, SpotifyAccessService spotifyAccessService)
         {
             _roomService = roomService;
-            this._logger = _logger;
+            _logger = logger;
             _spotifyAccessService = spotifyAccessService;
         }
 
@@ -193,10 +193,82 @@ namespace PugetSound.Controllers
             });
         }
 
+        public IActionResult Admin()
+        {
+            return View(new AdminModel());
+        }
+
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
+
+        public IActionResult AdminRoomCleanup(AdminModel model)
+        {
+            var username = HttpContext.User.Claims.GetSpotifyUsername();
+            var adminUsername = Environment.GetEnvironmentVariable("PugetSoundAdminUser");
+
+            if (username != adminUsername)
+            {
+                _logger.Log(LogLevel.Warning, "[ADMIN] {Username} tried to clean up {Room} but wasn't the {AdminUserName}", username, model.RoomName, adminUsername);
+                return View("Admin", new AdminModel
+                {
+                    Result = "Failed to clean up room, you don't have admin rights!"
+                });
+            }
+
+            var success = _roomService.TryForceCleanupRoom(model.RoomName);
+
+            if (!success)
+            {
+                _logger.Log(LogLevel.Information, "[ADMIN] {Username} tried to clean up {Room} but the operation failed.", username, model.RoomName);
+                return View("Admin", new AdminModel
+                {
+                    Result = $"Failed to clean up {model.RoomName}"
+                });
+            }
+
+            _logger.Log(LogLevel.Information, "[ADMIN] {Username} cleaned up {Room}", username, model.RoomName);
+            return View("Admin", new AdminModel
+            {
+                Result = $"Successfully cleaned up {model.RoomName}"
+            });
+        }
+
+        public IActionResult AdminKickUser(AdminModel model)
+        {
+            var username = HttpContext.User.Claims.GetSpotifyUsername();
+            var adminUsername = Environment.GetEnvironmentVariable("PugetSoundAdminUser");
+
+            if (username != adminUsername)
+            {
+                _logger.Log(LogLevel.Warning,
+                    "[ADMIN] {Username} tried to kick user {KickUsername} from {Room} but wasn't the {AdminUserName}",
+                    username, model.UserName, model.RoomName, adminUsername);
+                return View("Admin", new AdminModel
+                {
+                    Result = "Failed to kick user from room, you don't have admin rights!"
+                });
+            }
+
+            var success = _roomService.TryForceCleanupRoom(model.RoomName);
+
+            if (!success)
+            {
+                _logger.Log(LogLevel.Information, "[ADMIN] {Username} tried to kick {KickUsername} from {Room} but the operation failed.", username, model.UserName, model.RoomName);
+                return View("Admin", new AdminModel
+                {
+                    Result = $"Failed to kick {model.UserName} from {model.RoomName}"
+                });
+            }
+
+            _logger.Log(LogLevel.Information, "[ADMIN] {Username} kicked {KickUsername} from {Room}", username,
+                model.UserName, model.RoomName);
+            return View("Admin", new AdminModel
+            {
+                Result = $"Successfully kicked {model.UserName} from {model.RoomName}"
+            });
         }
     }
 }

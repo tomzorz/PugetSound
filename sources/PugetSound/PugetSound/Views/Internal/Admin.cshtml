@@ -1,0 +1,44 @@
+﻿@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@model PugetSound.Models.AdminModel
+@{
+    ViewData["Title"] = "Admin - PugetSound";
+    ViewData["Page"] = "internal/admin";
+}
+
+<div class="container page-admin">
+    <div class="row mb-3">
+        <div class="col-sm-12">
+            <h1>⚡ Admin</h1>
+        </div>
+    </div>
+    @if (!string.IsNullOrWhiteSpace(Model.Result))
+    {
+        <div class="alert alert-info">
+            <p>@Model.Result</p>
+        </div>
+    }
+    <div class="row">
+        <!-- force cleanup room (kick all users, call cleanup) -->
+        <div class="col-sm-12">
+            <h2>Force Cleanup Room</h2>
+            <form method="post" asp-action="AdminRoomCleanup">
+                <label>Room Name</label>
+                <input asp-for="RoomName" type="text" />
+                <input type="submit" value="Cleanup Room" />
+            </form>
+        </div>
+    </div>
+    <div class="row">
+        <!-- remove user from room -->
+        <div class="col-sm-12">
+            <h2>Remove User from Room</h2>
+            <form method="post" asp-action="AdminKickUser">
+                <label>Room Name</label>
+                <input asp-for="RoomName" type="text" />
+                <label>Spotify Username</label>
+                <input asp-for="UserName" type="text" />
+                <input type="submit" value="Remove User from Room" />
+            </form>
+        </div>
+    </div>
+</div>

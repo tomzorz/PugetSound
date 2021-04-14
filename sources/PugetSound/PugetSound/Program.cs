@@ -18,11 +18,13 @@ namespace PugetSound
      * - add phone / pc webapp meta info maybe
      * - clean up code (ongoing effort)
      * - create playlist from room history
+     * - admin tools
      *
      * IMPROVEMENTS
      * - add room history who voted to skip song
      * - add progress bar / votes required to vote skip song button
      * - fetch upcoming 1-3 songs for every user on queue listing, show them as upcoming
+     * - allow cleaning up of rooms where there are only listeners and no song has been played for X time
      *
      * BUGS
      * - after leave room joining a new one doesn't work?

@@ -123,6 +123,39 @@ namespace PugetSound.Logic
             return s;
         }
 
+        public bool TryForceCleanupRoom(string roomName)
+        {
+            var roomExists = _rooms.TryGetValue(roomName, out var room);
+
+            if (!roomExists) return false;
+
+            foreach (var roomMember in room.Members)
+            {
+                room.MemberLeave(roomMember);
+            }
+
+            _rooms.Remove(roomName);
+
+            return true;
+        }
+
+        public bool TryKickUserFromRoom(string roomName, string userName)
+        {
+            var roomExists = _rooms.TryGetValue(roomName, out var room);
+
+            if (!roomExists) return false;
+
+            var roomMember = room.Members.FirstOrDefault(x => x.UserName == userName);
+
+            if (roomMember == null) return false;
+
+            room.MemberLeave(roomMember);
+
+            _rooms.Remove(roomName);
+
+            return true;
+        }
+
         public async Task ProcessRoomsAsync()
         {
             var roomsForCleanup = new List<string>();

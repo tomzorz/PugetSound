@@ -31,7 +31,7 @@
             </div>
             }
             <p><em>Letters and hyphens allowed. On room creation spaces will be converted to hyphens, other disallowed will be removed. 3 characters minimum. If you don't enter anything we'll put you in the naughty room.</em></p>
-            <form method="post" asp-contoller="Index" asp-action="Room" class="form-room-join">
+            <form method="post" asp-action="Room" class="form-room-join">
                 <input type="hidden" asp-for="PlaylistId" value="@Model.PlaylistId" />
                 <input asp-for="RoomName" pattern="[-a-zA-Z ]{3,}" value="@Model.RoomName" class="mr-3" />
                 <input type="submit" value="Enter room" />

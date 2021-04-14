@@ -7,6 +7,8 @@ namespace PugetSound.Data
     {
         public DbSet<UserScore> UserScores { get; set; }
 
+        public DbSet<UserData> Users { get; set; }
+
         public AppDbContext(DbContextOptions<AppDbContext> dbContextOptions) : base(dbContextOptions)
         {
         }
@@ -14,6 +16,10 @@ namespace PugetSound.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder); // ⚠ don't remove
+
+            builder.Entity<UserData>()
+                .HasIndex(x => x.Id)
+                .IsUnique();
 
             builder.Entity<UserScore>()
                 .HasIndex(x => x.Id)
