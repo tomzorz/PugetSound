@@ -18,7 +18,6 @@ namespace PugetSound
      * - add phone / pc webapp meta info maybe
      * - clean up code (ongoing effort)
      * - create playlist from room history
-     * - admin tools
      *
      * IMPROVEMENTS
      * - add room history who voted to skip song
@@ -27,7 +26,6 @@ namespace PugetSound
      * - allow cleaning up of rooms where there are only listeners and no song has been played for X time
      *
      * BUGS
-     * - after leave room joining a new one doesn't work?
      * - spotify refresh token shenanigans
      *
      */

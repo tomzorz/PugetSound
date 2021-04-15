@@ -559,6 +559,11 @@ div[data-name="mojs-shape"] svg path {
     animation-delay: 2s;
 }
 
+.page-faq pre {
+    color: white;
+    display: inline;
+}
+
 @media screen and (max-width: 600px) {
     .external-welcome-wrapper {
         display: block;

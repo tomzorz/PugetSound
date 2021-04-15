@@ -122,22 +122,29 @@ namespace PugetSound
 
             member.VotedSkipSong = true;
 
-            if (oldVal == false)
-            {
-                OnRoomNotification?.Invoke(this, new RoomNotification
-                {
-                    Category = RoomNotificationCategory.Information,
-                    Message = $"{member.FriendlyName} voted to skip song"
-                });
-            }
+            var requiredVotes = _members.Count / 2;
+            var totalVotes = _members.Count(x => x.VotedSkipSong);
 
-            if (_members.Count / 2 > _members.Count(x => x.VotedSkipSong)) return;
+            var changedCount = oldVal == false;
+
+            if (requiredVotes > totalVotes)
+            {
+                if (changedCount)
+                {
+                    OnRoomNotification?.Invoke(this, new RoomNotification
+                    {
+                        Category = RoomNotificationCategory.Information,
+                        Message = $"{member.FriendlyName} voted to skip song, {requiredVotes-totalVotes} more vote(s) until skipping..."
+                    });
+                }
+                return;
+            }
 
             _roomEvents.Add(new SongSkippedEvent());
             OnRoomNotification?.Invoke(this, new RoomNotification
             {
                 Category = RoomNotificationCategory.Success,
-                Message = $"Skipping song with {_members.Count(x => x.VotedSkipSong)} votes"
+                Message = $"Skipping song with {_members.Count(x => x.VotedSkipSong)} vote(s)"
             });
 
             _handledUntil = DateTimeOffset.Now;
