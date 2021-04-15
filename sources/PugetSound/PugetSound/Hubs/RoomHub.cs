@@ -201,8 +201,15 @@ namespace PugetSound.Hubs
 
             if (DateTimeOffset.Now - timeout > ChatTimeout)
             {
-                // send message
-                await Clients.Group(room.RoomId).Chat(room.Members.First(x => x.UserName == username).FriendlyName, message);
+                if (message == "/fixplaying")
+                {
+                    room.TryFixPlaybackForMember(room.Members.First(x => x.UserName == username));
+                }
+                else
+                {
+                    // send message
+                    await Clients.Group(room.RoomId).Chat(room.Members.First(x => x.UserName == username).FriendlyName, message);
+                }
 
                 // set new timeout
                 ConnectionTimeouts[Context.ConnectionId] = DateTimeOffset.Now;

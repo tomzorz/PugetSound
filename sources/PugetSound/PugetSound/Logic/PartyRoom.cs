@@ -88,6 +88,12 @@ namespace PugetSound
             _timeSinceEmpty = _customFutureDateTimeOffset;
         }
 
+        public void TryFixPlaybackForMember(RoomMember member)
+        {
+            if (_currentTrack == null) return;
+            StartSongForMemberUgly(member);
+        }
+
         private async void StartSongForMemberUgly(RoomMember member)
         {
             var left = _handledUntil.ToUnixTimeMilliseconds() - DateTimeOffset.Now.ToUnixTimeMilliseconds();
@@ -241,14 +247,16 @@ namespace PugetSound
                     }
                     UpdateReactionTotals();
 
+                    var artistSum = string.Join(", ", song.Artists.Select(x => x.Name).ToArray());
+
                     // return state
                     CurrentRoomState = new RoomState
                     {
                         IsPlayingSong = true,
                         CurrentDjUsername = nextPlayer.UserName,
                         CurrentDjName = nextPlayer.FriendlyName,
-                        CurrentSongArtist = string.Join(", ", song.Artists.Select(x => x.Name).ToArray()),
-                        CurrentSongTitle = song.Name,
+                        CurrentSongArtist = artistSum.Length > 50 ? artistSum.Substring(0, 50) + "..." : artistSum,
+                        CurrentSongTitle = song.Name.Length > 50 ? song.Name.Substring(0, 50) + "..." : song.Name,
                         CurrentSongArtUrl = song?.Album.Images.FirstOrDefault()?.Url ?? "/images/missingart.jpg",
                         SongStartedAtUnixTimestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
                         SongFinishesAtUnixTimestamp = _handledUntil.ToUnixTimeMilliseconds()
