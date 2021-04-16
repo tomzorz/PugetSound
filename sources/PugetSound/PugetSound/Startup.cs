@@ -42,6 +42,7 @@ namespace PugetSound
                 options.UseSqlite("Data Source=pugetsound.sqlite");
             });
 
+            services.AddSingleton<StatisticsService>();
             services.AddSingleton<UserScoreService>();
             services.AddSingleton<RoomService>();
 

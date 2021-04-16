@@ -17,6 +17,7 @@ namespace PugetSound
         private readonly ILogger _logger;
         private readonly SpotifyAccessService _spotifyAccessService;
         private readonly UserScoreService _userScoreService;
+        private readonly StatisticsService _statisticsService;
         private DateTimeOffset _handledUntil;
         private DateTimeOffset _timeSinceEmpty;
         private int _currentDjNumber;
@@ -42,11 +43,12 @@ namespace PugetSound
 
         public Dictionary<Reaction, int> CurrentReactionTotals { get; private set; }
 
-        public PartyRoom(string roomId, ILogger logger, SpotifyAccessService spotifyAccessService, UserScoreService userScoreService)
+        public PartyRoom(string roomId, ILogger logger, SpotifyAccessService spotifyAccessService, UserScoreService userScoreService, StatisticsService statisticsService)
         {
             _logger = logger;
             _spotifyAccessService = spotifyAccessService;
             _userScoreService = userScoreService;
+            _statisticsService = statisticsService;
             RoomId = roomId;
             _members = new List<RoomMember>();
             _roomEvents = new List<IRoomEvent>();
@@ -70,6 +72,8 @@ namespace PugetSound
         public void MemberJoin(RoomMember member)
         {
             if (_members.Any(x => x.UserName == member.UserName)) return;
+
+            _statisticsService.IncrementUserCount();
 
             _members.Add(member);
             OnRoomMembersChanged?.Invoke(this, member.UserName);
@@ -158,6 +162,8 @@ namespace PugetSound
         {
             var didRemove = _members.Remove(member);
             if (!didRemove) return;
+
+            _statisticsService.DecrementUserCount();
 
             _roomEvents.Add(new UserEvent(member.UserName, member.FriendlyName, UserEventType.LeftRoom));
             OnRoomNotification?.Invoke(this, new RoomNotification

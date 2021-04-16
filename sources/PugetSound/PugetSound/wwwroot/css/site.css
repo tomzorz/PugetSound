@@ -285,7 +285,7 @@ h3 a[data-toggle="collapse"].collapsed::after {
     margin-bottom: 0;
 }
 
-.external-welcome-wrapper p span {
+.external-welcome-wrapper p .premium-notice {
     font-size: 1rem;
     color: #d0d0d0;
     font-style: italic;
@@ -359,6 +359,17 @@ a.whitelink:hover {
     top: 0;
     right: 0;
     left: 0;
+}
+
+.page-home .home-statistics {
+    padding-bottom: 2rem;
+    font-size: 18px;
+    color: #d0d0d0;
+}
+
+.page-home .home-statistics span {
+    color: #1ed760;
+    font-weight: bold;
 }
 
 .invite-link-area {

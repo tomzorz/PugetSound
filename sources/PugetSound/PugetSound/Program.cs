@@ -42,7 +42,8 @@ namespace PugetSound
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Warning) // with the serilog middleware
                 .MinimumLevel.Override("System", LogEventLevel.Warning) // with the serilog middleware
                 .Enrich.FromLogContext()
-                .Enrich.WithExceptionDetails();
+                .Enrich.WithExceptionDetails()
+                .Enrich.With<LogEnricher>();
 #if DEBUG
             loggerConfiguration.WriteTo.Console()
                 .WriteTo.Debug();

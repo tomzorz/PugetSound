@@ -18,15 +18,17 @@ namespace PugetSound.Logic
         private readonly ILoggerFactory _loggerFactory;
         private readonly SpotifyAccessService _spotifyAccessService;
         private readonly UserScoreService _userScoreService;
+        private readonly StatisticsService _statisticsService;
 
         public RoomService(IHubContext<RoomHub, IRoomHubInterface> roomHubContext, ILogger<RoomService> logger, ILoggerFactory loggerFactory, SpotifyAccessService spotifyAccessService,
-            UserScoreService userScoreService)
+            UserScoreService userScoreService, StatisticsService statisticsService)
         {
             _roomHubContext = roomHubContext;
             _logger = logger;
             _loggerFactory = loggerFactory;
             _spotifyAccessService = spotifyAccessService;
             _userScoreService = userScoreService;
+            _statisticsService = statisticsService;
             _rooms = new Dictionary<string, PartyRoom>();
             _memberRoomCache = new Dictionary<string, PartyRoom>();
         }
@@ -47,7 +49,8 @@ namespace PugetSound.Logic
             if (_rooms.ContainsKey(roomId)) return _rooms[roomId];
 
             var roomLogger = _loggerFactory.CreateLogger<PartyRoom>();
-            var room = new PartyRoom(roomId, roomLogger, _spotifyAccessService, _userScoreService);
+            var room = new PartyRoom(roomId, roomLogger, _spotifyAccessService, _userScoreService, _statisticsService);
+            _statisticsService.IncrementRoomCount();
             room.OnRoomMembersChanged += Room_OnRoomMembersChanged;
             room.OnRoomNotification += Room_OnRoomNotification;
             room.OnRoomCurrentReactionsChanged += Room_OnRoomCurrentReactionsChanged;
@@ -136,6 +139,8 @@ namespace PugetSound.Logic
 
             _rooms.Remove(roomName);
 
+            _statisticsService.DecrementRoomCount();
+
             return true;
         }
 
@@ -150,8 +155,6 @@ namespace PugetSound.Logic
             if (roomMember == null) return false;
 
             room.MemberLeave(roomMember);
-
-            _rooms.Remove(roomName);
 
             return true;
         }
@@ -199,6 +202,7 @@ namespace PugetSound.Logic
             foreach (var roomId in roomsForCleanup)
             {
                 _rooms.Remove(roomId);
+                _statisticsService.DecrementRoomCount();
                 _logger.Log(LogLevel.Information, "Cleaned up empty room {Room}", roomId);
             }
         }

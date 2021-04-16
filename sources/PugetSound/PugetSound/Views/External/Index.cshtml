@@ -1,20 +1,36 @@
-﻿@{
+﻿@using Humanizer
+@using PugetSound.Logic
+@inject StatisticsService StatisticsService
+@{
     ViewData["Title"] = "PugetSound";
     ViewData["Page"] = "external/welcome";
 }
 
-<div class="container not-exactly-fixed-top h-100">
+@{
+    var users = "user".ToQuantity(StatisticsService.UserCount);
+    var rooms = "room".ToQuantity(StatisticsService.RoomCount);
+}
+
+<div class="container not-exactly-fixed-top h-100 page-home">
     <div class="external-welcome-wrapper h-100">
         <div class="headerlogo">
             <img src="ms-icon-144x144.png" />
             <h1>PugetSound</h1>
         </div>
-        <p>PugetSound allows you and your group to enjoy music together using Spotify!<br /><span>Spotify Premium required.</span></p>
+        <p>
+            PugetSound allows you and your group to enjoy music together using Spotify!
+            <br />
+            <span class="premium-notice">Spotify Premium required.</span>
+        </p>
         <a href="/internal" class="bigbutton">Join with Spotify</a>
-        <div class="links">
-            <a href="/howitworks">💡 How It Works</a>
-            <a href="https://github.com/tomzorz/PugetSound">⚙ On GitHub</a>
-            <a href="https://github.com/tomzorz/PugetSound/graphs/contributors">💕 Contributors</a>
-        </div>
+        @if (StatisticsService.UserCount > 0)
+        {
+            <p class="home-statistics">Currently hosting <span>@users</span> in <span>@rooms</span> - Join in on the fun! 🎉</p>
+        }
+    <div class="links">
+        <a href="/howitworks">💡 How It Works</a>
+        <a href="https://github.com/tomzorz/PugetSound">⚙ GitHub (Issues + Feedback)<br />💝 Support Development (sponsor links on the right)</a>
+        <a href="https://github.com/tomzorz/PugetSound/graphs/contributors">💕 Contributors</a>
+    </div>
     </div>
 </div>
