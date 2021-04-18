@@ -95,6 +95,7 @@ namespace PugetSound
         public void TryFixPlaybackForMember(RoomMember member)
         {
             if (_currentTrack == null) return;
+            _logger.LogInformation("Trying to fix playback for {Username} in {Room}", member.UserName, RoomId);
             StartSongForMemberUgly(member);
         }
 
@@ -144,6 +145,8 @@ namespace PugetSound
                 return;
             }
 
+            _logger.Log(LogLevel.Information, "Skipping current song in {Room} with group vote", RoomId);
+
             OnRoomNotification?.Invoke(this, new RoomNotification
             {
                 Category = RoomNotificationCategory.Success,
@@ -156,6 +159,8 @@ namespace PugetSound
         public void TryForceSkipAsDj(RoomMember member)
         {
             if (CurrentRoomState.CurrentDjUsername != member.UserName) return;
+
+            _logger.Log(LogLevel.Information, "Skipping current song in {Room} per request of the DJ", RoomId);
 
             OnRoomNotification?.Invoke(this, new RoomNotification
             {
