@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -172,7 +173,10 @@ namespace PugetSound
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
-            app.UseSerilogRequestLogging();
+            app.UseSerilogRequestLogging(options =>
+            {
+                options.EnrichDiagnosticContext = EnrichDiagnosticContext;
+            });
 
             app.UseRouting();
 
@@ -194,6 +198,15 @@ namespace PugetSound
 
                 endpoints.MapHub<RoomHub>("/roomhub");
             });
+        }
+
+        private void EnrichDiagnosticContext(IDiagnosticContext diagnosticContext, HttpContext httpContext)
+        {
+            var username = httpContext.User.Claims.GetSpotifyUsername();
+
+            if (string.IsNullOrWhiteSpace(username)) return;
+
+            diagnosticContext.Set("Username", username);
         }
     }
 }

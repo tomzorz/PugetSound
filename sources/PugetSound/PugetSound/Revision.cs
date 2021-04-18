@@ -8,7 +8,7 @@
 
         private const int Day = 18;
 
-        private const string DailyRevision = "alpha";
+        private const string DailyRevision = "beta";
 
         public static string CssQuery { get; } = $"{Year}{Month:D2}{Day:D2}{DailyRevision}";
 
