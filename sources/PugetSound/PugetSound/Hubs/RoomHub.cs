@@ -201,14 +201,20 @@ namespace PugetSound.Hubs
 
             if (DateTimeOffset.Now - timeout > ChatTimeout)
             {
-                if (message == "/fixplaying")
+                switch (message)
                 {
-                    room.TryFixPlaybackForMember(room.Members.First(x => x.UserName == username));
-                }
-                else
-                {
-                    // send message
-                    await Clients.Group(room.RoomId).Chat(room.Members.First(x => x.UserName == username).FriendlyName, message);
+                    case "/fixplaying":
+                        // fix playback for current user
+                        room.TryFixPlaybackForMember(room.Members.First(x => x.UserName == username));
+                        break;
+                    case "/djskip":
+                        // skip the current song if it came from this user
+                        room.TryForceSkipAsDj(room.Members.First(x => x.UserName == username));
+                        break;
+                    default:
+                        // send message
+                        await Clients.Group(room.RoomId).Chat(room.Members.First(x => x.UserName == username).FriendlyName, message);
+                        break;
                 }
 
                 // set new timeout

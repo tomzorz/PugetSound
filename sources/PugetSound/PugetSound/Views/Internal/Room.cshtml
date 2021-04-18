@@ -266,6 +266,8 @@
         .withAutomaticReconnect()
         .build();
 
+    connection.serverTimeoutInMilliseconds = 1000 * 60 * 60; /* 1 hour */
+
     connection.onreconnecting(error => {
         console.assert(connection.state === signalR.HubConnectionState.Reconnecting);
         document.getElementById("connectionBox").className = "alert alert-warning";

@@ -144,12 +144,31 @@ namespace PugetSound
                 return;
             }
 
-            _roomEvents.Add(new SongSkippedEvent());
             OnRoomNotification?.Invoke(this, new RoomNotification
             {
                 Category = RoomNotificationCategory.Success,
                 Message = $"Skipping song with {_members.Count(x => x.VotedSkipSong)} vote(s)"
             });
+
+            SkipSongActual();
+        }
+
+        public void TryForceSkipAsDj(RoomMember member)
+        {
+            if (CurrentRoomState.CurrentDjUsername != member.UserName) return;
+
+            OnRoomNotification?.Invoke(this, new RoomNotification
+            {
+                Category = RoomNotificationCategory.Success,
+                Message = $"Skipping song per DJ's request"
+            });
+
+            SkipSongActual();
+        }
+
+        private void SkipSongActual()
+        {
+            _roomEvents.Add(new SongSkippedEvent());
 
             _handledUntil = DateTimeOffset.Now;
             foreach (var roomMember in _members)
@@ -301,7 +320,9 @@ namespace PugetSound
 
                 if (!devices.Devices.Any()) throw new Exception("No devices available to play on!");
 
-                var device = devices.Devices.FirstOrDefault(x => x.IsActive) ?? devices.Devices.First();
+                var device = (devices.Devices.FirstOrDefault(x => x.IsActive)
+                             ?? devices.Devices.FirstOrDefault(x => x.Type == "Computer"))
+                             ?? devices.Devices.First();
 
                 var resume = await api.ResumePlaybackAsync(deviceId:device.Id, uris: new List<string> { song.Uri }, offset: 0, positionMs: positionMs);
 
