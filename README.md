@@ -1,6 +1,6 @@
 # PugetSound
 
-PugetSound allows you and your group to enjoy music together using Spotify.
+PugetSound allows you and your group to enjoy music together using Spotify. Public production instance: https://pugetsound.party - you can also follow https://twitter.com/PugetSoundTwit for updates.
 
 ![](https://img.shields.io/badge/platform-any-green.svg?longCache=true&style=flat-square) ![](https://img.shields.io/badge/license-MIT-blue.svg?longCache=true&style=flat-square)
 
@@ -12,6 +12,10 @@ The main inspiration for this project was AuxParty, but I wanted to improve on t
 - remove the need to keep the browser page open, handle the logic on the backend
 - remove the arbitrary 5 DJ limit
 - make it more stable (although the stability issues might've been caused by the recent increase in use)
+
+## Contributing
+
+Please read [contributing](https://github.com/tomzorz/PugetSound/blob/master/CONTRIBUTING.md) before submitting any PRs.
 
 ## Getting it to run
 
