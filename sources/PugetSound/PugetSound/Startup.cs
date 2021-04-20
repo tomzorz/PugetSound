@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
@@ -9,11 +10,13 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Net.Http.Headers;
 using PugetSound.Auth;
 using PugetSound.Data;
 using PugetSound.Data.Services;
@@ -170,6 +173,13 @@ namespace PugetSound
                 app.UseHsts();
             }
 
+            app.Use((context, next) =>
+            {
+                // disable google's floc cancer
+                context.Response.Headers.Add("Permissions-Policy", "interest-cohort=()");
+                return next.Invoke();
+            });
+
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
@@ -202,11 +212,22 @@ namespace PugetSound
 
         private void EnrichDiagnosticContext(IDiagnosticContext diagnosticContext, HttpContext httpContext)
         {
+            // add common
+            diagnosticContext.Set("Protocol", httpContext.Request.Protocol);
+            diagnosticContext.Set("Scheme", httpContext.Request.Scheme);
+
+            // add user-agent
+            if (httpContext.Request.Headers.TryGetValue(HeaderNames.UserAgent, out var userAgent))
+            {
+                diagnosticContext.Set("UserAgent", userAgent.ToString());
+            }
+
+            // add spotify username
             var username = httpContext.User.Claims.GetSpotifyUsername();
-
-            if (string.IsNullOrWhiteSpace(username)) return;
-
-            diagnosticContext.Set("Username", username);
+            if (!string.IsNullOrWhiteSpace(username))
+            {
+                diagnosticContext.Set("Username", username);
+            }
         }
     }
 }
