@@ -252,7 +252,7 @@ namespace PugetSound.Controllers
                 });
             }
 
-            var success = _roomService.TryForceCleanupRoom(model.RoomName);
+            var success = _roomService.TryKickUserFromRoom(model.RoomName, model.UserName);
 
             if (!success)
             {
