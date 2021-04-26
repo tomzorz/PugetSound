@@ -57,7 +57,7 @@ namespace PugetSound.Hubs
             // assign connection ID
             room.Members.First(x => x.UserName == username).ConnectionId = Context.ConnectionId;
 
-            _logger.Log(LogLevel.Information, "{User} saying hello", username);
+            _logger.Log(LogLevel.Information, "{Username} saying hello", username);
 
             // send down state
             var (listeners, djs) = await room.Members.UpdateAndSplitMembers(_userScoreService);
