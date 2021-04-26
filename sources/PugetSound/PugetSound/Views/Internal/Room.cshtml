@@ -515,7 +515,7 @@
 
     document.getElementById("joinDjButton").addEventListener("click",
         function(event) {
-            connection.invoke("becomeDj").catch(function(err) {
+            connection.invoke("toggleDj", true).catch(function(err) {
                 return console.error(err.toString());
             });
             event.preventDefault();
@@ -523,7 +523,7 @@
 
     document.getElementById("joinListenerButton").addEventListener("click",
         function(event) {
-            connection.invoke("becomeListener").catch(function(err) {
+            connection.invoke("toggleDj", false).catch(function(err) {
                 return console.error(err.toString());
             });
             event.preventDefault();

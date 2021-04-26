@@ -24,14 +24,20 @@ namespace PugetSound.Hubs
             _userScoreService = userScoreService;
         }
 
-        public override async Task OnConnectedAsync()
+        private (bool isValid, PartyRoom room, string username) TryEnsure()
         {
-            // ensure room
             var username = Context.User.Claims.GetSpotifyUsername();
 
             var hasRoom = _roomService.TryGetRoomForUsername(username, out var room);
 
-            if (!hasRoom) return;
+            return (hasRoom, room, username);
+        }
+
+        public override async Task OnConnectedAsync()
+        {
+            // ensure room
+            var (isValid, room, username) = TryEnsure();
+            if (!isValid) return;
 
             // add to room group
             await Groups.AddToGroupAsync(Context.ConnectionId, room.RoomId);
@@ -45,11 +51,8 @@ namespace PugetSound.Hubs
         public async Task Hello(long clientTime)
         {
             // ensure room
-            var username = Context.User.Claims.GetSpotifyUsername();
-
-            var hasRoom = _roomService.TryGetRoomForUsername(username, out var room);
-
-            if (!hasRoom) return;
+            var (isValid, room, username) = TryEnsure();
+            if (!isValid) return;
 
             // assign connection ID
             room.Members.First(x => x.UserName == username).ConnectionId = Context.ConnectionId;
@@ -73,11 +76,8 @@ namespace PugetSound.Hubs
         public Task LeaveRoom()
         {
             // ensure room
-            var username = Context.User.Claims.GetSpotifyUsername();
-
-            var hasRoom = _roomService.TryGetRoomForUsername(username, out var room);
-
-            if (!hasRoom) return Task.CompletedTask;
+            var (isValid, room, username) = TryEnsure();
+            if (!isValid) return Task.CompletedTask;
 
             // signal leave
             room.MemberLeave(room.Members.FirstOrDefault(x => x.UserName == username));
@@ -85,36 +85,19 @@ namespace PugetSound.Hubs
             return Task.CompletedTask;
         }
 
-        public Task BecomeDj()
+        public Task ToggleDj(bool isDj)
         {
             // ensure room
-            var username = Context.User.Claims.GetSpotifyUsername();
+            var (isValid, room, username) = TryEnsure();
+            if (!isValid) return Task.CompletedTask;
 
-            var hasRoom = _roomService.TryGetRoomForUsername(username, out var room);
-
-            if (!hasRoom) return Task.CompletedTask;
-
-            _logger.Log(LogLevel.Information, "{Username} became DJ in {Room}", username, room.RoomId);
+            _logger.Log(LogLevel.Information,
+                // ReSharper disable once TemplateIsNotCompileTimeConstantProblem
+                isDj ? "{Username} became DJ in {Room}" : "{Username} became listener in {Room}", username,
+                room.RoomId);
 
             // set to dj
-            room.ToggleDj(room.Members.First(x => x.UserName == username), true);
-
-            return Task.CompletedTask;
-        }
-
-        public Task BecomeListener()
-        {
-            // ensure room
-            var username = Context.User.Claims.GetSpotifyUsername();
-
-            var hasRoom = _roomService.TryGetRoomForUsername(username, out var room);
-
-            if (!hasRoom) return Task.CompletedTask;
-
-            _logger.Log(LogLevel.Information, "{Username} became listener in {Room}", username, room.RoomId);
-
-            // set to listener
-            room.ToggleDj(room.Members.First(x => x.UserName == username), false);
+            room.ToggleDj(room.Members.First(x => x.UserName == username), isDj);
 
             return Task.CompletedTask;
         }
@@ -122,11 +105,8 @@ namespace PugetSound.Hubs
         public Task VoteSkipSong()
         {
             // ensure room
-            var username = Context.User.Claims.GetSpotifyUsername();
-
-            var hasRoom = _roomService.TryGetRoomForUsername(username, out var room);
-
-            if (!hasRoom) return Task.CompletedTask;
+            var (isValid, room, username) = TryEnsure();
+            if (!isValid) return Task.CompletedTask;
 
             _logger.Log(LogLevel.Information, "{Username} voted to skip song in {Room}", username, room.RoomId);
 
@@ -139,11 +119,8 @@ namespace PugetSound.Hubs
         public async Task AddToLiked()
         {
             // ensure room
-            var username = Context.User.Claims.GetSpotifyUsername();
-
-            var hasRoom = _roomService.TryGetRoomForUsername(username, out var room);
-
-            if (!hasRoom) return;
+            var (isValid, room, username) = TryEnsure();
+            if (!isValid) return;
 
             _logger.Log(LogLevel.Information, "{Username} in {Room} added the current song to their liked songs", username, room.RoomId);
 
@@ -154,11 +131,8 @@ namespace PugetSound.Hubs
         public Task ReactionPressed(string reaction)
         {
             // ensure room
-            var username = Context.User.Claims.GetSpotifyUsername();
-
-            var hasRoom = _roomService.TryGetRoomForUsername(username, out var room);
-
-            if (!hasRoom) return Task.CompletedTask;
+            var (isValid, room, username) = TryEnsure();
+            if (!isValid) return Task.CompletedTask;
 
             // mark reaction
             var didChangeReactionState = room.UserReaction(room.Members.First(x => x.UserName == username), reaction);
@@ -187,11 +161,8 @@ namespace PugetSound.Hubs
             }
 
             // ensure room
-            var username = Context.User.Claims.GetSpotifyUsername();
-
-            var hasRoom = _roomService.TryGetRoomForUsername(username, out var room);
-
-            if (!hasRoom) return;
+            var (isValid, room, username) = TryEnsure();
+            if (!isValid) return;
 
             // ensure value
             if (!ConnectionTimeouts.ContainsKey(Context.ConnectionId))  ConnectionTimeouts[Context.ConnectionId] = DateTimeOffset.MinValue;
