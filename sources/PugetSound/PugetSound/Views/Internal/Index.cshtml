@@ -19,10 +19,11 @@
             <h2>Join or create room</h2>
             @if (Model.IsAlreadyInRoom)
             {
-            <div class="alert alert-info">
-                <p>👀 It looks like you're still in <strong>🎶 @Model.RoomName</strong>! This room has been pre-filled so that you can back to your music - just press [Enter room] to continue.</p>
-                <p class="mb-0">If you enter a different room name you'll leave your current one.</p>
-            </div>
+                <div class="alert alert-info">
+                    <p>Heads up! 👀</p>
+                    <p><strong>It looks like you're still in 🎶@Model.RoomName!</strong> This room has been pre-filled so that you can back to your music - just press [Enter room] to continue.</p>
+                    <p class="mb-0">If you enter a different room name you'll leave your current one.</p>
+                </div>
             }
             else if (!string.IsNullOrWhiteSpace(Model.RoomName))
             {

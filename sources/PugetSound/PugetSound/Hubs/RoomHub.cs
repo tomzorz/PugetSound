@@ -73,18 +73,6 @@ namespace PugetSound.Hubs
             if (room.CurrentRoomState.IsPlayingSong) await Clients.Caller.SongChanged(room.CurrentRoomState);
         }
 
-        public Task LeaveRoom()
-        {
-            // ensure room
-            var (isValid, room, username) = TryEnsure();
-            if (!isValid) return Task.CompletedTask;
-
-            // signal leave
-            room.MemberLeave(room.Members.FirstOrDefault(x => x.UserName == username));
-
-            return Task.CompletedTask;
-        }
-
         public Task ToggleDj(bool isDj)
         {
             // ensure room

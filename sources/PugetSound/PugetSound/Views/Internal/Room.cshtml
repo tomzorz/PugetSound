@@ -69,7 +69,11 @@
     <div class="row">
         <div class="col-sm-4 controls-area">
             <h3>Controls</h3>
-            <input type="button" class="redButton" id="leaveRoomButton" value="Leave Room" />
+            <form method="post" asp-action="LeaveRoom" class="form-room-leave">
+                <input type="hidden" asp-for="UserName" value="@Model.UserName" />
+                <input type="hidden" asp-for="RoomName" value="@Model.RoomName" />
+                <input type="submit" class="redButton" id="leaveRoomButton" value="Leave Room" />
+            </form>
             <input type="button" id="voteSkipSongButton" value="Vote Skip Song" />
             <input type="button" id="addToLikedButton" value="Add To Liked Songs" />
             <p class="mt-3 mb-3"><a href="/internal/roomhistory/@Model.RoomName" target="_blank">View Room History (opens in new tab)</a></p>
@@ -495,22 +499,14 @@
     // outgoing events
 
     document.getElementById("leaveRoomButton").addEventListener("click",
-        function(event) {
-            connection.invoke("leaveRoom").then(function() {
-                // gtag
-                gtag('event',
-                    'user_left',
-                    {
-                        'event_category': '@Model.RoomName',
-                    });
-
-                window.removeEventListener('beforeunload', beforeUnload, true);
-                window.location.href = '/internal';
-            }).catch(function(err) {
-                return console.error(err.toString());
-            });
-
-            event.preventDefault();
+        function (event) {
+            // gtag
+            gtag('event',
+                'user_left',
+                {
+                    'event_category': '@Model.RoomName'
+                });
+            window.removeEventListener('beforeunload', beforeUnload, true);
         });
 
     document.getElementById("joinDjButton").addEventListener("click",

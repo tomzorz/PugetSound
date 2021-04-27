@@ -332,6 +332,10 @@ h3 a[data-toggle="collapse"].collapsed::after {
     font-weight: bold;
 }
 
+.form-room-leave {
+    display: inline;
+}
+
 a.whitelink {
     color: white;
     text-decoration: underline;

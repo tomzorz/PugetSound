@@ -6,9 +6,9 @@
 
         private const int Month = 04;
 
-        private const int Day = 20;
+        private const int Day = 27;
 
-        private const string DailyRevision = "beta";
+        private const string DailyRevision = "alpha";
 
         public static string CssQuery { get; } = $"{Year}{Month:D2}{Day:D2}{DailyRevision}";
 

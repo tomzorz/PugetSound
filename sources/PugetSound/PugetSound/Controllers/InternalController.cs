@@ -193,6 +193,20 @@ namespace PugetSound.Controllers
             });
         }
 
+        public async Task<IActionResult> LeaveRoom(RoomModel model)
+        {
+            var username = HttpContext.User.Claims.GetSpotifyUsername();
+
+            var hasRoom = _roomService.TryGetRoomForUsername(model.UserName, out var room);
+
+            if (username == model.UserName && hasRoom)
+            {
+                room.MemberLeave(room.Members.FirstOrDefault(x => x.UserName == username));
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
         public IActionResult Admin()
         {
             return View(new AdminModel());
