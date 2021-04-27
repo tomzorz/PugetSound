@@ -18,6 +18,7 @@ namespace PugetSound
         private readonly SpotifyAccessService _spotifyAccessService;
         private readonly UserScoreService _userScoreService;
         private readonly StatisticsService _statisticsService;
+        private readonly DevicePersistenceService _devicePersistenceService;
         private DateTimeOffset _handledUntil;
         private DateTimeOffset _timeSinceEmpty;
         private int _currentDjNumber;
@@ -43,12 +44,13 @@ namespace PugetSound
 
         public Dictionary<Reaction, int> CurrentReactionTotals { get; private set; }
 
-        public PartyRoom(string roomId, ILogger logger, SpotifyAccessService spotifyAccessService, UserScoreService userScoreService, StatisticsService statisticsService)
+        public PartyRoom(string roomId, ILogger logger, SpotifyAccessService spotifyAccessService, UserScoreService userScoreService, StatisticsService statisticsService, DevicePersistenceService devicePersistenceService)
         {
             _logger = logger;
             _spotifyAccessService = spotifyAccessService;
             _userScoreService = userScoreService;
             _statisticsService = statisticsService;
+            _devicePersistenceService = devicePersistenceService;
             RoomId = roomId;
             _members = new List<RoomMember>();
             _roomEvents = new List<IRoomEvent>();
@@ -325,11 +327,29 @@ namespace PugetSound
 
                 if (!devices.Devices.Any()) throw new Exception("No devices available to play on!");
 
-                var device = (devices.Devices.FirstOrDefault(x => x.IsActive)
-                             ?? devices.Devices.FirstOrDefault(x => x.Type == "Computer"))
-                             ?? devices.Devices.First();
+                var activeDevice = devices.Devices.FirstOrDefault(x => x.IsActive);
 
-                var resume = await api.ResumePlaybackAsync(deviceId:device.Id, uris: new List<string> { song.Uri }, offset: 0, positionMs: positionMs);
+                var hasShouldBeActive = _devicePersistenceService.TryGetActiveDeviceId(member.UserName, out var shouldBeActiveDeviceId);
+
+                if (activeDevice != null && activeDevice.Id != shouldBeActiveDeviceId)
+                {
+                    // set if changed
+                    _devicePersistenceService.SetDeviceState(member.UserName, activeDevice.Id);
+                }
+
+                // active device was somehow lost, if it's still in the list then reactivate it
+                if (activeDevice == null && hasShouldBeActive)
+                {
+                    activeDevice = devices.Devices.FirstOrDefault(x => x.Id == shouldBeActiveDeviceId);
+                }
+
+                if (activeDevice == null)
+                {
+                    _devicePersistenceService.CleanDeviceState(member.UserName);
+                    throw new Exception("No active device found to play music on.");
+                }
+
+                var resume = await api.ResumePlaybackAsync(deviceId:activeDevice.Id, uris: new List<string> { song.Uri }, offset: 0, positionMs: positionMs);
 
                 resume.ThrowOnError(nameof(api.ResumePlaybackAsync));
             }

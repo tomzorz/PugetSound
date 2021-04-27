@@ -48,6 +48,7 @@ namespace PugetSound
 
             services.AddSingleton<StatisticsService>();
             services.AddSingleton<UserScoreService>();
+            services.AddSingleton<DevicePersistenceService>();
             services.AddSingleton<RoomService>();
 
             services.AddControllersWithViews(configure =>

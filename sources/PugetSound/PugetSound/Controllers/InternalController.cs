@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using PugetSound.Auth;
+using PugetSound.Helpers;
 using PugetSound.Logic;
 using PugetSound.Models;
 using SpotifyAPI.Web.Enums;
@@ -19,14 +20,15 @@ namespace PugetSound.Controllers
         private readonly RoomService _roomService;
         private readonly ILogger<InternalController> _logger;
         private readonly SpotifyAccessService _spotifyAccessService;
+        private readonly DevicePersistenceService _devicePersistenceService;
 
-        public InternalController(RoomService roomService, ILogger<InternalController> logger, SpotifyAccessService spotifyAccessService)
+        public InternalController(RoomService roomService, ILogger<InternalController> logger, SpotifyAccessService spotifyAccessService, DevicePersistenceService devicePersistenceService)
         {
             _roomService = roomService;
             _logger = logger;
             _spotifyAccessService = spotifyAccessService;
+            _devicePersistenceService = devicePersistenceService;
         }
-
 
         public async Task<IActionResult> Index(string join = null)
         {
@@ -129,6 +131,8 @@ namespace PugetSound.Controllers
         [HttpPost]
         public async Task<IActionResult> Room(IndexModel room)
         {
+            room.Error = "";
+
             var username = HttpContext.User.Claims.GetSpotifyUsername();
 
             // turn off shuffle and repeat, best effort...
@@ -142,7 +146,9 @@ namespace PugetSound.Controllers
 
                 if (!devices.Devices.Any()) throw new Exception("No devices available to set shuffle/repeat on!");
 
-                var device = devices.Devices.FirstOrDefault(x => x.IsActive) ?? devices.Devices.First();
+                var device = devices.Devices.PickPreferredDevice();
+
+                _devicePersistenceService.SetDeviceState(username, device.Id);
 
                 var repeatResult = await api.SetRepeatModeAsync(RepeatState.Off, device.Id);
                 repeatResult.ThrowOnError(nameof(api.SetRepeatModeAsync));
@@ -157,6 +163,10 @@ namespace PugetSound.Controllers
                 // oh well
                 Debug.WriteLine(e);
                 _logger.Log(LogLevel.Warning, "Failed to turn off shuffle and/or repeat for {Username} upon entering room because {@Exception}", username, e);
+
+                // redirect to index
+                room.Error = "Couldn't find any Spotify clients to use! Make sure you have one online before trying to join a room!";
+                return View(nameof(Index), room);
             }
 
             // prev room?
@@ -202,6 +212,8 @@ namespace PugetSound.Controllers
             if (username == model.UserName && hasRoom)
             {
                 room.MemberLeave(room.Members.FirstOrDefault(x => x.UserName == username));
+
+                _devicePersistenceService.CleanDeviceState(username);
             }
 
             return RedirectToAction(nameof(Index));

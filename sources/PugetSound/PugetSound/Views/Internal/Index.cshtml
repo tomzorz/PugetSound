@@ -16,6 +16,13 @@
                 <p class="mb-0">@Model.PlaylistMessage<a href="@Model.PlaylistLink">@Constants.QueuePlaylistName</a></p>
             </div>
             <hr />
+            @if (!string.IsNullOrWhiteSpace(Model.Error))
+            {
+                <div class="alert alert-warning">
+                    <p>⚠ Error</p>
+                    <p>@Model.Error</p>
+                </div>
+            }
             <h2>Join or create room</h2>
             @if (Model.IsAlreadyInRoom)
             {
@@ -33,6 +40,12 @@
             }
             <p><em>Letters and hyphens allowed. On room creation spaces will be converted to hyphens, other disallowed will be removed. 3 characters minimum. If you don't enter anything we'll put you in the naughty room.</em></p>
             <form method="post" asp-action="Room" class="form-room-join">
+                <input type="hidden" asp-for="UserName" value="@Model.UserName" />
+                <input type="hidden" asp-for="ProfileLink" value="@Model.ProfileLink" />
+                <input type="hidden" asp-for="FriendlyName" value="@Model.FriendlyName" />
+                <input type="hidden" asp-for="PlaylistMessage" value="@Model.PlaylistMessage" />
+                <input type="hidden" asp-for="PlaylistLink" value="@Model.PlaylistLink" />
+                <input type="hidden" asp-for="IsAlreadyInRoom" value="@Model.IsAlreadyInRoom" />
                 <input type="hidden" asp-for="PlaylistId" value="@Model.PlaylistId" />
                 <input asp-for="RoomName" pattern="[-a-zA-Z ]{3,}" value="@Model.RoomName" class="mr-3" />
                 <input type="submit" value="Enter room" />

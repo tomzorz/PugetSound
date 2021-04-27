@@ -17,5 +17,7 @@ namespace PugetSound.Models
         public string PlaylistId { get; set; }
 
         public bool IsAlreadyInRoom { get; set; }
+
+        public string Error { get; set; }
     }
 }

@@ -19,9 +19,10 @@ namespace PugetSound.Logic
         private readonly SpotifyAccessService _spotifyAccessService;
         private readonly UserScoreService _userScoreService;
         private readonly StatisticsService _statisticsService;
+        private readonly DevicePersistenceService _devicePersistenceService;
 
         public RoomService(IHubContext<RoomHub, IRoomHubInterface> roomHubContext, ILogger<RoomService> logger, ILoggerFactory loggerFactory, SpotifyAccessService spotifyAccessService,
-            UserScoreService userScoreService, StatisticsService statisticsService)
+            UserScoreService userScoreService, StatisticsService statisticsService, DevicePersistenceService devicePersistenceService)
         {
             _roomHubContext = roomHubContext;
             _logger = logger;
@@ -29,6 +30,7 @@ namespace PugetSound.Logic
             _spotifyAccessService = spotifyAccessService;
             _userScoreService = userScoreService;
             _statisticsService = statisticsService;
+            _devicePersistenceService = devicePersistenceService;
             _rooms = new Dictionary<string, PartyRoom>();
             _memberRoomCache = new Dictionary<string, PartyRoom>();
         }
@@ -49,7 +51,7 @@ namespace PugetSound.Logic
             if (_rooms.ContainsKey(roomId)) return _rooms[roomId];
 
             var roomLogger = _loggerFactory.CreateLogger<PartyRoom>();
-            var room = new PartyRoom(roomId, roomLogger, _spotifyAccessService, _userScoreService, _statisticsService);
+            var room = new PartyRoom(roomId, roomLogger, _spotifyAccessService, _userScoreService, _statisticsService, _devicePersistenceService);
             _statisticsService.IncrementRoomCount();
             room.OnRoomMembersChanged += Room_OnRoomMembersChanged;
             room.OnRoomNotification += Room_OnRoomNotification;
