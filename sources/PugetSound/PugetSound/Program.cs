@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using PugetSound.Data;
 using PugetSound.Logic;
 using Serilog;
@@ -38,9 +39,9 @@ namespace PugetSound
             var seqUri = Environment.GetEnvironmentVariable("SeqClientAddress");
 
             var loggerConfiguration = new LoggerConfiguration()
-                .MinimumLevel.Information()
-                .MinimumLevel.Override("Microsoft", LogEventLevel.Warning) // with the serilog middleware
-                .MinimumLevel.Override("System", LogEventLevel.Warning) // with the serilog middleware
+                .MinimumLevel.Debug()
+                //.MinimumLevel.Override("Microsoft", LogEventLevel.Warning) // with the serilog middleware
+                //.MinimumLevel.Override("System", LogEventLevel.Warning) // with the serilog middleware
                 .Enrich.FromLogContext()
                 .Enrich.WithExceptionDetails()
                 .Enrich.With<LogEnricher>();
@@ -93,8 +94,8 @@ namespace PugetSound
         public static IHostBuilder CreateHostBuilder(string[] args) => Host.CreateDefaultBuilder(args)
               .ConfigureLogging(logging =>
               {
-                  //logging.AddFilter("Microsoft.AspNetCore.SignalR", LogLevel.Debug);
-                  //logging.AddFilter("Microsoft.AspNetCore.Http.Connections", LogLevel.Debug);
+                  logging.AddFilter("Microsoft.AspNetCore.SignalR", LogLevel.Debug);
+                  logging.AddFilter("Microsoft.AspNetCore.Http.Connections", LogLevel.Debug);
               })
               .ConfigureWebHostDefaults(webBuilder =>
               {
