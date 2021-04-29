@@ -18,6 +18,8 @@ namespace PugetSound.Logic
 
         public string Score { get; set; }
 
+        public int PlayFailureCount { get; set; }
+
         [JsonIgnore]
         public string ConnectionId { get; set; }
 

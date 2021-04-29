@@ -134,7 +134,10 @@ namespace PugetSound.Logic
 
             if (!roomExists) return false;
 
-            foreach (var roomMember in room.Members)
+            // temp capture list so we don't modify it while looping
+            var tmpMemberList = room.Members.ToList();
+
+            foreach (var roomMember in tmpMemberList)
             {
                 room.MemberLeave(roomMember);
             }
@@ -167,7 +170,7 @@ namespace PugetSound.Logic
 
             foreach (var partyRoom in _rooms)
             {
-                // everyone left for 1h+, remove room
+                // everyone left for a day, remove room
                 if (partyRoom.Value.TimeSinceEmpty + TimeSpan.FromHours(24) < DateTimeOffset.Now)
                 {
                     partyRoom.Value.OnRoomMembersChanged -= Room_OnRoomMembersChanged;
@@ -175,6 +178,24 @@ namespace PugetSound.Logic
                     partyRoom.Value.OnRoomCurrentReactionsChanged -= Room_OnRoomCurrentReactionsChanged;
                     roomsForCleanup.Add(partyRoom.Value.RoomId);
                     continue;
+                }
+
+                // remove users with 10+ play failures
+                var problematicMembers = partyRoom.Value.Members.Where(x => x.PlayFailureCount > 10).ToList();
+                foreach (var problematicMember in problematicMembers)
+                {
+                    try
+                    {
+                        partyRoom.Value.MemberLeave(problematicMember);
+
+                        await _roomHubContext.Clients.Client(problematicMember.ConnectionId).ForcedRoomLeave();
+
+                        _logger.Log(LogLevel.Information, "Kicked {Username} for exceeding maximum playback failure count.", problematicMember.UserName);
+                    }
+                    catch (Exception e)
+                    {
+                        _logger.Log(LogLevel.Warning, "Error during removing problematic member {Username} because {@Exception}", problematicMember.UserName, e);
+                    }
                 }
 
                 try

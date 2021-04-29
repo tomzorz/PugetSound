@@ -352,6 +352,14 @@ namespace PugetSound
                 var resume = await api.ResumePlaybackAsync(deviceId:activeDevice.Id, uris: new List<string> { song.Uri }, offset: 0, positionMs: positionMs);
 
                 resume.ThrowOnError(nameof(api.ResumePlaybackAsync));
+
+                // reset failure count if playback started successfully
+                if (member.PlayFailureCount > 0)
+                {
+                    member.PlayFailureCount = 0;
+
+                    _logger.Log(LogLevel.Information, "Reset play failure count for {Username}", member.UserName);
+                }
             }
             catch (Exception e)
             {
@@ -379,7 +387,13 @@ namespace PugetSound
 
                     _roomRetries.Add(RetryTask);
                 }
-                // else oh well
+                else
+                {
+                    // not a server side error, increment member failure count
+                    member.PlayFailureCount += 1;
+
+                    _logger.Log(LogLevel.Information, "Incremented play failure count to {PlayFailureCount} for {Username}", member.PlayFailureCount, member.UserName);
+                }
 
                 Debug.WriteLine(e);
             }

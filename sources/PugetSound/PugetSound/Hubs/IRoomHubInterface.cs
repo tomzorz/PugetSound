@@ -12,6 +12,8 @@ namespace PugetSound.Hubs
 
         Task SongChanged(RoomState state);
 
+        Task ForcedRoomLeave();
+
         Task ApplyClientTimeDifference(long difference);
 
         Task ShowNotification(string category, string message);

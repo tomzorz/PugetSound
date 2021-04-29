@@ -56,7 +56,10 @@ namespace PugetSound
                 configure.Conventions.Add(new RouteTokenTransformerConvention(new LowerCaseParameterTransformer()));
             });
 
-            services.AddSignalR();
+            services.AddSignalR(options =>
+            {
+                options.ClientTimeoutInterval = TimeSpan.FromMinutes(2);
+            });
 
             services.AddSingleton(serviceProvider =>
             {

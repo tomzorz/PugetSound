@@ -383,6 +383,18 @@
                 });
         });
 
+    connection.on("ForcedRoomLeave",
+        function () {
+            // gtag
+            gtag('event',
+                'user_left',
+                {
+                    'event_category': '@Model.RoomName'
+                });
+            window.removeEventListener('beforeunload', beforeUnload, true);
+            window.location.href = '/internal';
+        });
+
     connection.on("ApplyClientTimeDifference",
         function(difference) {
             timeDifference = difference;
