@@ -166,6 +166,10 @@ namespace PugetSound.Controllers
 
                 // redirect to index
                 room.Error = "Couldn't find any Spotify clients to use! Make sure you have one online before trying to join a room!";
+                if (e.ToString().Contains("Restriction violated"))
+                {
+                    room.Error = "Something seems to went wrong on Spotify's end while setting up playback for you - please try again!";
+                }
                 return View(nameof(Index), room);
             }
 
