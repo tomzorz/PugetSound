@@ -51,7 +51,7 @@ namespace PugetSound
 
             if (!string.IsNullOrWhiteSpace(seqKey) && !string.IsNullOrWhiteSpace(seqUri))
             {
-                loggerConfiguration.WriteTo.Seq(seqUri, compact: true, apiKey: seqKey);
+                loggerConfiguration.WriteTo.Seq(seqUri, apiKey: seqKey);
             }
 
             Log.Logger = loggerConfiguration.CreateLogger();
