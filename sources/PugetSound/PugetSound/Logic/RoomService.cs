@@ -229,5 +229,15 @@ namespace PugetSound.Logic
                 _logger.Log(LogLevel.Information, "Cleaned up empty room {Room}", roomId);
             }
         }
+
+        public List<(string roomid, List<(string username, string friendlyname)>)> GenerateAdminSummary()
+            => _rooms
+                .Select(
+                    partyRoom
+                        => (partyRoom.Value.RoomId,
+                            partyRoom.Value.Members
+                                .Select(x => (x.UserName, x.FriendlyName))
+                                .ToList()))
+                .ToList();
     }
 }

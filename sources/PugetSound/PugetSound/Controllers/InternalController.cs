@@ -225,7 +225,10 @@ namespace PugetSound.Controllers
 
         public IActionResult Admin()
         {
-            return View(new AdminModel());
+            return View(new AdminModel
+            {
+                RoomsAndMembers = _roomService.GenerateAdminSummary()
+            });
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

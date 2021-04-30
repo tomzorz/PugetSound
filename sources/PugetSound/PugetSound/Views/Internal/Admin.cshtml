@@ -18,6 +18,20 @@
         </div>
     }
     <div class="row">
+        <!-- room listing -->
+        <div class="col-sm-12">
+            <h2>Room Listing</h2>
+            @foreach (var room in Model.RoomsAndMembers)
+            {
+                <h3>🎶 @room.roomid</h3>
+                @foreach (var member in room.Item2)
+                {
+                    <p>@member.username as @member.friendlyname <a href="spotify:user/:@member.username">🔗 on Spotify</a></p>
+                }
+            }
+        </div>
+    </div>
+    <div class="row">
         <!-- force cleanup room (kick all users, call cleanup) -->
         <div class="col-sm-12">
             <h2>Force Cleanup Room</h2>
