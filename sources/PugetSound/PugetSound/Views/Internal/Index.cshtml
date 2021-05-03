@@ -29,7 +29,13 @@
                 <div class="alert alert-info">
                     <p>Heads up! 👀</p>
                     <p><strong>It looks like you're still in 🎶@Model.RoomName!</strong> This room has been pre-filled so that you can back to your music - just press [Enter room] to continue.</p>
-                    <p class="mb-0">If you enter a different room name you'll leave your current one.</p>
+                    <p class="mb-0">If you enter a different room name you'll leave your current one. Alternatively you can press the [Leave room] button below to leave this room.</p>
+                    <br />
+                    <form method="post" asp-action="LeaveRoom" class="form-room-leave">
+                        <input type="hidden" asp-for="UserName" value="@Model.UserName" />
+                        <input type="hidden" asp-for="RoomName" value="@Model.RoomName" />
+                        <input type="submit" class="redButton" id="leaveRoomButton" value="Leave Room" />
+                    </form>
                 </div>
             }
             else if (!string.IsNullOrWhiteSpace(Model.RoomName))

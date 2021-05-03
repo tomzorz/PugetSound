@@ -166,17 +166,14 @@ namespace PugetSound.Logic
 
         public async Task ProcessRoomsAsync()
         {
-            var roomsForCleanup = new List<string>();
+            var roomsForCleanup = new List<PartyRoom>();
 
             foreach (var partyRoom in _rooms)
             {
-                // everyone left for a day, remove room
-                if (partyRoom.Value.TimeSinceEmpty + TimeSpan.FromHours(24) < DateTimeOffset.Now)
+                // no song played in the last 2 hours, schedule room for removal
+                if (partyRoom.Value.TimeSinceLastSongPlayed + TimeSpan.FromHours(2) < DateTimeOffset.Now)
                 {
-                    partyRoom.Value.OnRoomMembersChanged -= Room_OnRoomMembersChanged;
-                    partyRoom.Value.OnRoomNotification -= Room_OnRoomNotification;
-                    partyRoom.Value.OnRoomCurrentReactionsChanged -= Room_OnRoomCurrentReactionsChanged;
-                    roomsForCleanup.Add(partyRoom.Value.RoomId);
+                    roomsForCleanup.Add(partyRoom.Value);
                     continue;
                 }
 
@@ -222,11 +219,43 @@ namespace PugetSound.Logic
             }
 
             // clean up old rooms
-            foreach (var roomId in roomsForCleanup)
+            foreach (var room in roomsForCleanup)
             {
-                _rooms.Remove(roomId);
+                // remove members
+                var members = room.Members.ToList();
+                foreach (var roomMember in members)
+                {
+                    try
+                    {
+                        room.MemberLeave(roomMember);
+
+                        await _roomHubContext.Clients.Client(roomMember.ConnectionId).ForcedRoomLeave();
+
+                        _logger.Log(LogLevel.Information, "Kicked {Username} as their room is closing down.", roomMember.UserName);
+                    }
+                    catch (Exception e)
+                    {
+                        _logger.Log(LogLevel.Warning, "Error during removing member {Username} because {@Exception}", roomMember.UserName, e);
+                    }
+                }
+
+                // ensure stats consistency (shouldn't really happen but eh)
+                var rc = room.Members.Count;
+                if (rc > 0)
+                {
+                    for (int i = 0; i < rc; i++)
+                    {
+                        _statisticsService.DecrementUserCount();
+                    }
+                }
+
+                // remove room
+                room.OnRoomMembersChanged -= Room_OnRoomMembersChanged;
+                room.OnRoomNotification -= Room_OnRoomNotification;
+                room.OnRoomCurrentReactionsChanged -= Room_OnRoomCurrentReactionsChanged;
+                _rooms.Remove(room.RoomId);
                 _statisticsService.DecrementRoomCount();
-                _logger.Log(LogLevel.Information, "Cleaned up empty room {Room}", roomId);
+                _logger.Log(LogLevel.Information, "Cleaned up silent room {Room}", room.RoomId);
             }
         }
 

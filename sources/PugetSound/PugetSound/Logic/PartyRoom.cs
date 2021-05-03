@@ -20,15 +20,13 @@ namespace PugetSound
         private readonly StatisticsService _statisticsService;
         private readonly DevicePersistenceService _devicePersistenceService;
         private DateTimeOffset _handledUntil;
-        private DateTimeOffset _timeSinceEmpty;
+        private DateTimeOffset _timeSinceLastSongPlayed;
         private int _currentDjNumber;
         private FullTrack _currentTrack;
 
-        private readonly DateTimeOffset _customFutureDateTimeOffset = new DateTimeOffset(9999, 1, 1, 0, 0, 0, TimeSpan.Zero);
-
         private readonly List<Func<Task>> _roomRetries;
 
-        public DateTimeOffset TimeSinceEmpty => _timeSinceEmpty;
+        public DateTimeOffset TimeSinceLastSongPlayed => _timeSinceLastSongPlayed;
 
         public string RoomId { get; }
 
@@ -54,7 +52,7 @@ namespace PugetSound
             RoomId = roomId;
             _members = new List<RoomMember>();
             _roomEvents = new List<IRoomEvent>();
-            _timeSinceEmpty = _customFutureDateTimeOffset;
+            _timeSinceLastSongPlayed = DateTimeOffset.Now;
             _roomRetries = new List<Func<Task>>();
 
             _handledUntil = DateTimeOffset.Now;
@@ -90,8 +88,6 @@ namespace PugetSound
             ToggleDj(member, false);
 
             if (_currentTrack != null) StartSongForMemberUgly(member);
-
-            _timeSinceEmpty = _customFutureDateTimeOffset;
         }
 
         public void TryFixPlaybackForMember(RoomMember member)
@@ -201,12 +197,6 @@ namespace PugetSound
             OnRoomMembersChanged?.Invoke(this, member.UserName);
 
             UpdateReactionTotals();
-
-            // this was the last member to leave
-            if (!_members.Any())
-            {
-                _timeSinceEmpty = DateTimeOffset.Now;
-            }
         }
 
         public async Task<RoomState> TryPlayNext(bool force = false)
@@ -303,6 +293,9 @@ namespace PugetSound
 
                     _roomEvents.Add(new SongPlayedEvent(nextPlayer.UserName, nextPlayer.FriendlyName,
                         $"{CurrentRoomState.CurrentSongArtist} - {CurrentRoomState.CurrentSongTitle}", song.Id, song.Uri));
+
+                    // successfully played song, so change last song played
+                    _timeSinceLastSongPlayed = _handledUntil;
 
                     return CurrentRoomState;
                 }
