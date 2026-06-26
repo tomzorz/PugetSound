@@ -17,13 +17,13 @@ namespace PugetSound.Auth
     {
         private readonly Dictionary<string, string> _usernameToRefreshTokenStore;
 
-        private readonly Dictionary<string, (DateTimeOffset expiresAt, SpotifyWebAPI memberApi)> _usernameToApiStore;
+        private readonly Dictionary<string, (DateTimeOffset expiresAt, ISpotifyClient memberApi)> _usernameToApiStore;
 
         public SpotifyAccessService(ILogger<SpotifyAccessService> logger)
         {
             _logger = logger;
             _usernameToRefreshTokenStore = new Dictionary<string, string>();
-            _usernameToApiStore = new Dictionary<string, (DateTimeOffset expiresAt, SpotifyWebAPI memberApi)>();
+            _usernameToApiStore = new Dictionary<string, (DateTimeOffset expiresAt, ISpotifyClient memberApi)>();
         }
 
         private string _clientId;
@@ -83,12 +83,12 @@ namespace PugetSound.Auth
 
         }
 
-        public void StoreMemberApi(string username, SpotifyWebAPI api, DateTimeOffset? expirationOverride = null)
+        public void StoreMemberApi(string username, ISpotifyClient api, DateTimeOffset? expirationOverride = null)
         {
             _usernameToApiStore[username] = (expirationOverride ?? DateTimeOffset.Now.AddMinutes(59.0), api);
         }
 
-        public async Task<SpotifyWebAPI> TryGetMemberApi(string username)
+        public async Task<ISpotifyClient> TryGetMemberApi(string username)
         {
             // we have one cached
             if(_usernameToApiStore.ContainsKey(username))

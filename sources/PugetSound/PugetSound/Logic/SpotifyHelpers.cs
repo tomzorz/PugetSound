@@ -1,22 +1,10 @@
-﻿using System;
-using SpotifyAPI.Web;
-using SpotifyAPI.Web.Models;
+﻿using SpotifyAPI.Web;
 
 namespace PugetSound.Logic
 {
     public static class SpotifyHelpers
     {
-        public static void ThrowOnError(this BasicModel model, string action)
-        {
-            if (!model.HasError()) return;
-
-            throw new Exception($"{action} failed. HTTP {model.Error.Status} - {model.Error.Message}");
-        }
-
-        public static SpotifyWebAPI FromAccessToken(this string accessToken) => new SpotifyWebAPI
-        {
-            AccessToken = accessToken,
-            TokenType = "Bearer"
-        };
+        public static ISpotifyClient FromAccessToken(this string accessToken) =>
+            new SpotifyClient(SpotifyClientConfig.CreateDefault().WithToken(accessToken));
     }
 }
