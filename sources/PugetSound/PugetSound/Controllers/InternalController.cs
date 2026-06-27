@@ -47,8 +47,34 @@ namespace PugetSound.Controllers
             var firstPage = await api.Playlists.CurrentUsers(new PlaylistCurrentUsersRequest { Limit = paginationLimit });
             var allPlaylists = await api.PaginateAll(firstPage);
 
-            var existingPlaylist = allPlaylists.FirstOrDefault(x =>
-                !(x.Collaborative ?? false) && !(x.Public ?? false) && x.Name == Constants.QueuePlaylistName);
+            _logger.Log(LogLevel.Information,
+                "Fetched {PlaylistCount} playlists for {Username} (profile id {ProfileId}) while looking for queue playlist {QueuePlaylistName}",
+                allPlaylists.Count, username, profile.Id, Constants.QueuePlaylistName);
+
+            // log every playlist that matches by name so we can see why matching may fail
+            // (Spotify's Public/Collaborative flags on the list endpoint are unreliable for
+            // playlists created as private, so we must not hard-filter on them)
+            var nameMatches = allPlaylists
+                .Where(x => string.Equals(x.Name, Constants.QueuePlaylistName, StringComparison.Ordinal))
+                .ToList();
+
+            foreach (var candidate in nameMatches)
+            {
+                _logger.Log(LogLevel.Information,
+                    "Queue playlist name match for {Username}: Id={PlaylistId} OwnerId={OwnerId} Public={Public} Collaborative={Collaborative}",
+                    username, candidate.Id, candidate.Owner?.Id, candidate.Public, candidate.Collaborative);
+            }
+
+            // match on name + ownership only; this is robust against Spotify's flaky privacy flags
+            var existingPlaylist = nameMatches
+                .FirstOrDefault(x => string.Equals(x.Owner?.Id, profile.Id, StringComparison.OrdinalIgnoreCase));
+
+            if (existingPlaylist == null && nameMatches.Count > 0)
+            {
+                _logger.Log(LogLevel.Warning,
+                    "Found {NameMatchCount} playlist(s) named {QueuePlaylistName} for {Username} but none owned by profile id {ProfileId} - will create a new one",
+                    nameMatches.Count, Constants.QueuePlaylistName, username, profile.Id);
+            }
 
             // found it
             if (existingPlaylist != null)
@@ -71,11 +97,13 @@ namespace PugetSound.Controllers
                 queuePlaylistUrl = newPlaylist.Uri;
                 playlistMessage = "Created queue playlist: ";
 
-                _logger.Log(LogLevel.Information, "Created queue playlist for {Username}", username);
+                _logger.Log(LogLevel.Warning,
+                    "Created NEW queue playlist {PlaylistId} for {Username} because no owned playlist named {QueuePlaylistName} was found among {PlaylistCount} playlists ({NameMatchCount} name match(es))",
+                    newPlaylist.Id, username, Constants.QueuePlaylistName, allPlaylists.Count, nameMatches.Count);
             }
             else
             {
-                _logger.Log(LogLevel.Information, "Found queue playlist for {Username}", username);
+                _logger.Log(LogLevel.Information, "Found existing queue playlist {PlaylistId} for {Username}", existingPlaylist.Id, username);
             }
 
             var friendlyName = HttpContext.User.Claims.GetSpotifyFriendlyName();
@@ -137,9 +165,20 @@ namespace PugetSound.Controllers
 
                 var devices = await api.Player.GetAvailableDevices();
 
-                if (!devices.Devices.Any()) throw new Exception("No devices available to set shuffle/repeat on!");
+                var deviceList = devices.Devices ?? new System.Collections.Generic.List<Device>();
 
-                var device = devices.Devices.PickPreferredDevice();
+                _logger.Log(LogLevel.Information,
+                    "Found {DeviceCount} Spotify device(s) for {Username}: {Devices}",
+                    deviceList.Count, username,
+                    string.Join(", ", deviceList.Select(d => $"{d.Name}/{d.Type} (id={d.Id}, active={d.IsActive}, restricted={d.IsRestricted})")));
+
+                if (!deviceList.Any()) throw new Exception("No devices available to set shuffle/repeat on!");
+
+                var device = deviceList.PickPreferredDevice();
+
+                _logger.Log(LogLevel.Information,
+                    "Picked device {DeviceName} (id={DeviceId}, active={DeviceActive}) for {Username}",
+                    device.Name, device.Id, device.IsActive, username);
 
                 _devicePersistenceService.SetDeviceState(username, device.Id);
 

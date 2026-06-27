@@ -7,6 +7,31 @@
 
     <title>@ViewData["Title"]</title>
 
+    @{
+        var metaTitle = (ViewData["Title"] as string) ?? "PugetSound";
+        var metaDescription = (ViewData["Description"] as string)
+            ?? "PugetSound lets you and your group enjoy music together using Spotify. Spotify Premium required.";
+        var baseUrl = $"{Context.Request.Scheme}://{Context.Request.Host}";
+        var metaImage = $"{baseUrl}/ms-icon-310x310.png";
+        var metaUrl = $"{baseUrl}{Context.Request.Path}{Context.Request.QueryString}";
+    }
+
+    <meta name="description" content="@metaDescription" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PugetSound" />
+    <meta property="og:title" content="@metaTitle" />
+    <meta property="og:description" content="@metaDescription" />
+    <meta property="og:url" content="@metaUrl" />
+    <meta property="og:image" content="@metaImage" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="@metaTitle" />
+    <meta name="twitter:description" content="@metaDescription" />
+    <meta name="twitter:image" content="@metaImage" />
+
     <link rel="apple-touch-icon" sizes="57x57" href="/apple-icon-57x57.png">
     <link rel="apple-touch-icon" sizes="60x60" href="/apple-icon-60x60.png">
     <link rel="apple-touch-icon" sizes="72x72" href="/apple-icon-72x72.png">

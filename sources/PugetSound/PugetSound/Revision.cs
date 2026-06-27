@@ -2,11 +2,11 @@
 {
     public static class Revision
     {
-        private const int Year = 2021;
+        private const int Year = 2026;
 
-        private const int Month = 05;
+        private const int Month = 06;
 
-        private const int Day = 03;
+        private const int Day = 27;
 
         private const string DailyRevision = "beta";
 
