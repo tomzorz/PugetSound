@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using SpotifyAPI.Web.Models;
+using SpotifyAPI.Web;
 
 namespace PugetSound.Helpers
 {

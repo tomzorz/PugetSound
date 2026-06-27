@@ -7,8 +7,7 @@ using Microsoft.Extensions.Logging;
 using PugetSound.Auth;
 using PugetSound.Data.Services;
 using PugetSound.Logic;
-using SpotifyAPI.Web.Enums;
-using SpotifyAPI.Web.Models;
+using SpotifyAPI.Web;
 
 namespace PugetSound
 {
@@ -314,9 +313,7 @@ namespace PugetSound
             {
                 var api = await _spotifyAccessService.TryGetMemberApi(member.UserName);
 
-                var devices = await api.GetDevicesAsync();
-
-                devices.ThrowOnError(nameof(api.GetDevices));
+                var devices = await api.Player.GetAvailableDevices();
 
                 if (!devices.Devices.Any()) throw new Exception("No devices available to play on!");
 
@@ -342,9 +339,13 @@ namespace PugetSound
                     throw new Exception("No active device found to play music on.");
                 }
 
-                var resume = await api.ResumePlaybackAsync(deviceId:activeDevice.Id, uris: new List<string> { song.Uri }, offset: 0, positionMs: positionMs);
-
-                resume.ThrowOnError(nameof(api.ResumePlaybackAsync));
+                await api.Player.ResumePlayback(new PlayerResumePlaybackRequest
+                {
+                    DeviceId = activeDevice.Id,
+                    Uris = new List<string> { song.Uri },
+                    OffsetParam = new PlayerResumePlaybackRequest.Offset { Position = 0 },
+                    PositionMs = positionMs
+                });
 
                 // reset failure count if playback started successfully
                 if (member.PlayFailureCount > 0)
@@ -398,17 +399,17 @@ namespace PugetSound
             {
                 var api = await _spotifyAccessService.TryGetMemberApi(member.UserName);
 
-                var queueList = await api.GetPlaylistTracksAsync(playlist);
+                var queueList = await api.Playlists.GetPlaylistItems(playlist);
 
-                queueList.ThrowOnError(nameof(api.GetPlaylistTracks));
+                if (queueList.Items == null || !queueList.Items.Any()) return null;
 
-                if (!queueList.Items.Any()) return null;
+                // queue items can be tracks or episodes; we only handle tracks
+                if (queueList.Items.First().Track is not FullTrack track) return null;
 
-                var track = queueList.Items.First().Track;
-
-                var remove = await api.RemovePlaylistTrackAsync(playlist, new DeleteTrackUri(track.Uri, 0));
-
-                remove.ThrowOnError(nameof(api.RemovePlaylistTrackAsync));
+                await api.Playlists.RemovePlaylistItems(playlist, new PlaylistRemoveItemsRequestV2
+                {
+                    Items = new List<PlaylistRemoveItemsRequestV2.Item> { new() { Uri = track.Uri } }
+                });
 
                 return track;
 
@@ -442,9 +443,7 @@ namespace PugetSound
 
                 var track = _currentTrack;
 
-                var result = await api.SaveTrackAsync(track.Id);
-
-                result.ThrowOnError(nameof(api.SaveTrackAsync));
+                await api.Library.SaveItems(new LibrarySaveItemsRequest(new List<string> { track.Uri }));
 
                 OnRoomNotification?.Invoke(this, new RoomNotification
                 {

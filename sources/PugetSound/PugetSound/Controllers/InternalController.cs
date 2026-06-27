@@ -10,7 +10,7 @@ using PugetSound.Auth;
 using PugetSound.Helpers;
 using PugetSound.Logic;
 using PugetSound.Models;
-using SpotifyAPI.Web.Enums;
+using SpotifyAPI.Web;
 
 namespace PugetSound.Controllers
 {
@@ -37,41 +37,36 @@ namespace PugetSound.Controllers
             var api = await _spotifyAccessService.TryGetMemberApi(username);
 
             // guarantee playlist
-            var profile = await api.GetPrivateProfileAsync();
+            var profile = await api.UserProfile.Current();
 
             var queuePlaylist = "";
             var queuePlaylistUrl = "";
             var playlistMessage = "";
 
-            var offset = 0;
             const int paginationLimit = 50;
-            var playlists = await api.GetUserPlaylistsAsync(profile.Id, paginationLimit, offset);
-            // ReSharper disable once UselessBinaryOperation (this seems to be a resharper issue)
-            offset += paginationLimit;
+            var firstPage = await api.Playlists.CurrentUsers(new PlaylistCurrentUsersRequest { Limit = paginationLimit });
+            var allPlaylists = await api.PaginateAll(firstPage);
 
-            do
+            var existingPlaylist = allPlaylists.FirstOrDefault(x =>
+                !(x.Collaborative ?? false) && !(x.Public ?? false) && x.Name == Constants.QueuePlaylistName);
+
+            // found it
+            if (existingPlaylist != null)
             {
-                var playlist = playlists.Items.FirstOrDefault(x =>
-                    !x.Collaborative && !x.Public && x.Name == Constants.QueuePlaylistName);
-
-                // found it
-                if (playlist != null)
-                {
-                    queuePlaylist = playlist.Id;
-                    queuePlaylistUrl = playlist.Uri;
-                    playlistMessage = "Found existing queue playlist: ";
-                    break;
-                }
-
-                playlists = await api.GetUserPlaylistsAsync(profile.Id, paginationLimit, offset);
-                offset += paginationLimit;
-            } while (playlists.HasNextPage());
+                queuePlaylist = existingPlaylist.Id;
+                queuePlaylistUrl = existingPlaylist.Uri;
+                playlistMessage = "Found existing queue playlist: ";
+            }
 
             // if we didn't find the playlist create it
             if (string.IsNullOrWhiteSpace(queuePlaylist))
             {
-                var newPlaylist = await api.CreatePlaylistAsync(profile.Id, Constants.QueuePlaylistName, false, false,
-                    "PugetSound Queue playlist - add songs here you want to play");
+                var newPlaylist = await api.Playlists.Create(new PlaylistCreateRequest(Constants.QueuePlaylistName)
+                {
+                    Public = false,
+                    Collaborative = false,
+                    Description = "PugetSound Queue playlist - add songs here you want to play"
+                });
                 queuePlaylist = newPlaylist.Id;
                 queuePlaylistUrl = newPlaylist.Uri;
                 playlistMessage = "Created queue playlist: ";
@@ -140,9 +135,7 @@ namespace PugetSound.Controllers
             {
                 var api = await _spotifyAccessService.TryGetMemberApi(username);
 
-                var devices = await api.GetDevicesAsync();
-
-                devices.ThrowOnError(nameof(api.GetDevices));
+                var devices = await api.Player.GetAvailableDevices();
 
                 if (!devices.Devices.Any()) throw new Exception("No devices available to set shuffle/repeat on!");
 
@@ -150,11 +143,9 @@ namespace PugetSound.Controllers
 
                 _devicePersistenceService.SetDeviceState(username, device.Id);
 
-                var repeatResult = await api.SetRepeatModeAsync(RepeatState.Off, device.Id);
-                repeatResult.ThrowOnError(nameof(api.SetRepeatModeAsync));
+                await api.Player.SetRepeat(new PlayerSetRepeatRequest(PlayerSetRepeatRequest.State.Off) { DeviceId = device.Id });
 
-                var shuffleResult = await api.SetShuffleAsync(false, device.Id);
-                shuffleResult.ThrowOnError(nameof(api.SetShuffleAsync));
+                await api.Player.SetShuffle(new PlayerShuffleRequest(false) { DeviceId = device.Id });
 
                 _logger.Log(LogLevel.Information, "Turned off shuffle and repeat for {Username}", username);
             }
